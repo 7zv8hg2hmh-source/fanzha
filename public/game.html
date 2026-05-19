@@ -1,0 +1,3590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>上当模拟器 · 你能带着多少钱离场？</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="./config.js"></script>
+<style>
+  :root{
+    --gold:#f5c542; --gold-d:#b8860b; --neon:#00ffd5;
+    --red:#ef4444; --red-d:#7f1d1d;
+    --bg:#0a0a0a; --bg2:#15110b;
+    --font-display:"Oswald","Arial Black",sans-serif;
+  }
+  *{ -webkit-tap-highlight-color:transparent; box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:#000; color:#fff; overscroll-behavior:none;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; }
+  .font-mono{ font-family:"SF Mono","Menlo",monospace; font-variant-numeric:tabular-nums; }
+  .font-display{ font-family:var(--font-display); letter-spacing:.02em; }
+  /* 黑金赛博背景 */
+  .arcade-bg{
+    background:
+      radial-gradient(circle at 20% 0%, rgba(245,197,66,.12), transparent 50%),
+      radial-gradient(circle at 80% 100%, rgba(239,68,68,.12), transparent 50%),
+      linear-gradient(180deg,#0a0a0a 0%,#15110b 60%,#0a0a0a 100%);
+    min-height:100vh; min-height:100dvh;
+  }
+  .neon-text{ color:var(--gold); text-shadow:0 0 6px rgba(245,197,66,.6),0 0 12px rgba(245,197,66,.35); }
+  .red-text{ color:#fca5a5; text-shadow:0 0 6px rgba(239,68,68,.6); }
+  .gold-border{ border:1px solid rgba(245,197,66,.3); box-shadow:0 0 16px rgba(245,197,66,.08) inset; }
+  /* 强刺激按钮 */
+  .btn-pop{
+    background:linear-gradient(180deg,#ffd54a 0%,#e0a008 100%);
+    color:#1a1100; font-weight:900; border-radius:14px;
+    box-shadow:0 8px 18px rgba(245,197,66,.24), inset 0 -1px 0 rgba(122,83,0,.45), inset 0 1px 0 rgba(255,255,255,.35);
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .btn-pop:active{ transform:translateY(2px); box-shadow:0 4px 10px rgba(245,197,66,.2), inset 0 1px 2px rgba(122,83,0,.45); }
+  .btn-red{
+    background:linear-gradient(180deg,#ff5e5e,#b91c1c);
+    color:#fff; font-weight:900; border-radius:14px;
+    box-shadow:0 8px 0 #5c0d0d, 0 12px 24px rgba(239,68,68,.35);
+  }
+  .btn-red:active{ transform:translateY(4px); box-shadow:0 4px 0 #5c0d0d, 0 6px 14px rgba(239,68,68,.3); }
+  .btn-ghost{
+    background:transparent; border:1.5px solid rgba(255,255,255,.18); color:rgba(255,255,255,.7);
+    border-radius:14px; font-weight:600; cursor:pointer; font-size:14px;
+  }
+  .btn-ghost:active{ background:rgba(255,255,255,.05); }
+  .image-render-pixelated{ image-rendering:pixelated; }
+  /* 数字跳动 */
+  @keyframes pop { 0%{transform:scale(.7);opacity:0;} 60%{transform:scale(1.2);} 100%{transform:scale(1);opacity:1;} }
+  .num-pop{ animation:pop .35s ease-out both; }
+  @keyframes shake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-4px);} 40%{transform:translateX(5px);} 60%{transform:translateX(-3px);} 80%{transform:translateX(3px);} }
+  .shake{ animation:shake .4s; }
+  @keyframes glow { 0%,100%{box-shadow:0 0 12px rgba(245,197,66,.4);} 50%{box-shadow:0 0 24px rgba(245,197,66,.85);} }
+  .glow{ animation:glow 1.6s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  .blink{ animation:blink 1s ease-in-out infinite; }
+  /* 转盘 */
+  .wheel-shell{
+    width:270px; height:270px; margin:0 auto; position:relative; border-radius:999px;
+    padding:12px; background:linear-gradient(145deg,#ff3b22 0%,#ff1f16 42%,#c90f0f 100%);
+    box-shadow:0 0 0 5px rgba(255,255,255,.16), 0 18px 36px rgba(255,39,20,.25), 0 18px 34px rgba(0,0,0,.36);
+  }
+  .wheel-shell::before{
+    content:''; position:absolute; inset:-22px; border-radius:42px; z-index:-1;
+    background:linear-gradient(180deg,#ff4529,#fb8a45);
+    box-shadow:inset 0 0 42px rgba(255,255,255,.18);
+  }
+  .wheel-shell::after{
+    content:''; position:absolute; inset:19px; border-radius:999px; pointer-events:none; z-index:3;
+    border:2px solid rgba(255,255,255,.58);
+    box-shadow:inset 0 0 0 3px rgba(255,221,150,.55);
+  }
+  .wheel{
+    position:absolute; inset:12px; border-radius:999px; overflow:hidden;
+    transition:transform 1.7s cubic-bezier(.12,.72,.08,1);
+    box-shadow:inset 0 0 0 7px #fff2d2, inset 0 0 0 9px #e8b985, inset 0 0 24px rgba(106,52,15,.28);
+  }
+  .wheel::after{
+    content:''; position:absolute; inset:0; border-radius:999px; pointer-events:none;
+    background:repeating-conic-gradient(from -90deg, rgba(255,255,255,.72) 0deg 1.2deg, transparent 1.2deg 45deg);
+  }
+  .wheel-label{
+    position:absolute; left:50%; top:50%; width:76px; height:48px; margin:-24px 0 0 -38px;
+    transform:rotate(var(--a)) translateY(-94px);
+    display:flex; align-items:center; justify-content:center; pointer-events:none;
+    transform-origin:center center;
+  }
+  .wheel-label span{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+    color:#8b4d22; font-size:11px; font-weight:900; line-height:1.05; white-space:nowrap;
+    text-shadow:0 1px 0 rgba(255,255,255,.85);
+  }
+  .wheel-label b{
+    min-width:30px; height:21px; padding:0 6px; border-radius:999px;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,#fff7df,#ffd57a);
+    color:#e23b16; font-size:12px; box-shadow:0 2px 0 rgba(123,61,16,.18);
+  }
+  .wheel-label em{
+    font-style:normal; letter-spacing:0; max-width:66px; overflow:hidden; text-overflow:ellipsis;
+  }
+  .wheel-center{
+    position:absolute; inset:89px 61px 62px; border-radius:22px; z-index:4;
+    background:linear-gradient(180deg,#fffdf4 0%,#ffe2b6 100%);
+    border:3px solid #fff3ce;
+    box-shadow:0 8px 0 #d96b21, 0 14px 22px rgba(105,45,0,.32), inset 0 2px 0 rgba(255,255,255,.8);
+  }
+  .wheel-pointer{
+    position:absolute; top:54px; left:50%; transform:translateX(-50%); z-index:6;
+    width:32px; height:26px; filter:drop-shadow(0 4px 5px rgba(104,60,20,.35));
+  }
+  .wheel-pointer::before{
+    content:''; position:absolute; left:50%; top:0; transform:translateX(-50%);
+    width:0; height:0; border-left:16px solid transparent; border-right:16px solid transparent; border-bottom:24px solid #53b8ff;
+  }
+  .wheel-pointer::after{
+    content:''; position:absolute; left:50%; top:8px; transform:translateX(-50%);
+    width:10px; height:10px; border-radius:999px; background:#fff; opacity:.8;
+  }
+  .wheel-draw-btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:4px;
+    margin-bottom:2px; padding:6px 17px; border-radius:999px;
+    background:linear-gradient(180deg,#ffb356,#ff7a1f);
+    color:#fff; font-weight:900; font-size:17px; line-height:1;
+    border:2px solid rgba(255,255,255,.72);
+    text-shadow:0 2px 0 rgba(151,54,0,.4);
+    box-shadow:0 4px 0 #b84a0a, 0 8px 14px rgba(151,54,0,.28);
+  }
+  .wheel-luck{
+    display:inline-flex; align-items:center; gap:4px; margin-top:3px; padding:3px 8px;
+    border-radius:999px; background:linear-gradient(180deg,#8a35ff,#6d1de0);
+    color:#fff; font-weight:900; font-size:10px; box-shadow:0 4px 0 #4c139c;
+  }
+  .wheel-pool{
+    display:flex; align-items:baseline; justify-content:center; gap:3px; margin-top:5px;
+    color:#fff; font-weight:900; text-shadow:0 2px 0 rgba(81,25,0,.35);
+  }
+  .wheel-pool strong{
+    color:#ffe45f; font-size:28px; line-height:.95; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+  }
+  .wheel-buff-row{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:3px; margin-top:5px; max-width:108px;
+  }
+  .wheel-buff{
+    padding:2px 6px; border-radius:999px; font-size:9px; font-weight:900; line-height:1.2;
+    color:#fff; background:linear-gradient(180deg,#ff5e5e,#d8261f);
+    box-shadow:0 2px 0 rgba(114,22,16,.6);
+  }
+  .wheel-progress-mini{
+    width:132px; padding:10px; border-radius:14px;
+    background:rgba(0,0,0,.28); border:1px solid rgba(245,197,66,.24);
+    box-shadow:inset 0 0 14px rgba(245,197,66,.06);
+  }
+  @media (max-width:430px){
+    .wheel-progress-mini{ width:100%; max-width:240px; margin:12px auto 0; }
+  }
+  .draw-card{
+    min-height:76px; border-radius:12px; padding:10px;
+    background:linear-gradient(160deg,rgba(251,191,36,.18),rgba(220,38,38,.12));
+    border:1px solid rgba(245,197,66,.3);
+    box-shadow:0 8px 18px rgba(0,0,0,.22), inset 0 0 16px rgba(245,197,66,.08);
+  }
+  .draw-card.empty{
+    background:linear-gradient(160deg,rgba(251,191,36,.06),rgba(220,38,38,.04));
+    border:1px dashed rgba(245,197,66,.2);
+    box-shadow:0 4px 12px rgba(0,0,0,.15);
+    color:#a1a1aa;
+    position:relative;
+    overflow:hidden;
+  }
+  .draw-card.empty::before{
+    content:'?';
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    font-size:28px; font-weight:900; color:rgba(251,191,36,.15);
+    animation:cardPulse 2s ease-in-out infinite;
+  }
+  @keyframes cardPulse{ 0%,100%{opacity:.15;transform:translate(-50%,-50%) scale(1);} 50%{opacity:.35;transform:translate(-50%,-50%) scale(1.15);} }
+  /* 宝箱风暴 */
+  @keyframes chestShake{
+    0%,100%{transform:translateX(0) rotate(0deg) scale(1);}
+    15%{transform:translateX(-5px) rotate(-5deg) scale(1.04);}
+    30%{transform:translateX(5px) rotate(5deg) scale(1.06);}
+    45%{transform:translateX(-4px) rotate(-4deg) scale(1.04);}
+    60%{transform:translateX(4px) rotate(4deg) scale(1.05);}
+    80%{transform:translateX(0) rotate(0deg) scale(1.1);}
+  }
+  @keyframes chestBurst{
+    0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(.85);}
+    50%{opacity:1;transform:translate(-50%,-50%) scale(1.18);}
+  }
+  @keyframes rewardPop{
+    0%{opacity:0;transform:translateY(8px) scale(.88);}
+    60%{opacity:1;transform:translateY(-2px) scale(1.08);}
+    100%{opacity:1;transform:translateY(0) scale(1);}
+  }
+  @keyframes danmakuFlow{ from{transform:translateX(100%);} to{transform:translateX(-120%);} }
+  .treasure-chest{ position:relative; display:inline-block; filter:drop-shadow(0 0 20px rgba(245,197,66,.28)); }
+  .treasure-chest.opening{ animation:chestShake .8s ease-in-out both; }
+  .treasure-chest.opening::after{
+    content:''; position:absolute; left:50%; top:50%; width:96px; height:96px;
+    border-radius:999px; background:radial-gradient(circle,rgba(255,245,180,.55),rgba(245,197,66,.18) 42%,transparent 70%);
+    animation:chestBurst .8s ease-in-out both; z-index:-1;
+  }
+  .reward-pop{ animation:rewardPop .36s ease-out both; }
+  .treasure-stage{ position:relative; overflow:hidden; }
+  .danmaku-float{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  .danmaku-item{
+    position:absolute; white-space:nowrap; font-size:11px; color:#fde68a;
+    background:rgba(0,0,0,.34); border:1px solid rgba(245,197,66,.18);
+    border-radius:999px; padding:3px 9px;
+    animation:danmakuFlow 10s linear infinite;
+  }
+  /* 排行滚动 */
+  .marquee{ display:flex; gap:48px; animation:marquee 30s linear infinite; white-space:nowrap; }
+  @keyframes marquee { from{transform:translateX(0);} to{transform:translateX(-50%);} }
+  /* 滑动条 */
+  .scroll-hide::-webkit-scrollbar{ display:none; }
+  .scroll-hide{ scrollbar-width:none; }
+  /* 飘金币 */
+  .coin{ position:fixed; left:50%; top:30%; font-size:24px; pointer-events:none; z-index:99;
+    animation:coinUp 1.4s ease-out forwards; }
+  @keyframes coinUp{ 0%{opacity:0; transform:translate(-50%, 20px) scale(.5);}
+                     20%{opacity:1; transform:translate(-50%, 0) scale(1.2);}
+                     100%{opacity:0; transform:translate(-50%, -120px) scale(1);} }
+  .toast{ position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    background:rgba(10,10,10,.92); border:1px solid rgba(245,197,66,.35);
+    color:#fff; padding:10px 18px; border-radius:999px; font-size:13px; z-index:100;
+    box-shadow:0 4px 16px rgba(0,0,0,.6); }
+  /* 水印 */
+  .watermark{
+    position:fixed; bottom:6px; left:50%; transform:translateX(-50%);
+    z-index:200; pointer-events:none; opacity:.55;
+    font-size:10px; color:#999; letter-spacing:.1em;
+    background:rgba(0,0,0,.5); padding:2px 10px; border-radius:99px;
+    border:1px solid rgba(245,197,66,.2);
+  }
+  /* 卡片 */
+  .card{
+    background:linear-gradient(160deg, rgba(255,255,255,.04), rgba(245,197,66,.04));
+    border:1px solid rgba(245,197,66,.18);
+    border-radius:18px;
+  }
+  .card-locked{ background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06); opacity:.55; }
+  .stripe-warn{
+    background:repeating-linear-gradient(45deg,#facc15 0 12px,#000 12px 24px);
+    height:6px;
+  }
+  /* 红包 */
+  .redpack{
+    background:linear-gradient(180deg,#dc2626,#7f1d1d);
+    color:#ffe4a3; border-radius:14px;
+    box-shadow:inset 0 0 0 2px #fbbf24, 0 8px 20px rgba(239,68,68,.4);
+  }
+  /* 排名条 */
+  /* 高风险投资 K 线 */
+  .kline-panel{
+    background:linear-gradient(180deg,rgba(9,12,18,.92),rgba(10,10,10,.96));
+    border:1px solid rgba(245,197,66,.18);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:inset 0 0 24px rgba(245,197,66,.04);
+  }
+  .kline-svg{ width:100%; height:210px; display:block; }
+  .ticker-strip{
+    display:flex; gap:8px; overflow:hidden; white-space:nowrap;
+    border-top:1px solid rgba(255,255,255,.06);
+    background:rgba(0,0,0,.28);
+  }
+  .ticker-strip span{ min-width:max-content; animation:marquee 22s linear infinite; }
+</style>
+</head>
+<body class="arcade-bg">
+<div id="app"></div>
+<div id="customModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;padding:20px;"></div>
+<div id="customToast" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(10,10,10,0.95);border:1px solid rgba(245,197,66,0.4);color:#fff;padding:12px 20px;border-radius:16px;font-size:14px;z-index:10000;box-shadow:0 8px 32px rgba(0,0,0,0.6);max-width:320px;text-align:center;"></div>
+<div class="watermark">模拟教学 · 无真实资金交易 · 不涉及真实支付/赌博/投资</div>
+
+<script>
+"use strict";
+
+// ============================================================================
+//  上当模拟器 · 主程序
+// ============================================================================
+
+window.FG_API_BASE = window.FG_API_BASE || '';
+// GitHub Pages cannot run /api routes. Leave empty for the built-in static fallback,
+// or set window.FG_API_BASE in config.js to use a remote API, e.g. Supabase Edge Function.
+const API_BASE = String(window.FG_API_BASE || '').replace(/\/$/, '');
+const LOCAL_HOSTS = ['localhost', '127.0.0.1', '::1'];
+let forceStaticApi = !API_BASE && (location.protocol === 'file:' || !LOCAL_HOSTS.includes(location.hostname));
+const INITIAL_BALANCE = 10000;
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => {
+  if (n == null || isNaN(n)) return '¥0';
+  const sign = n < 0 ? '-' : '';
+  return sign + '¥' + Math.abs(n|0).toLocaleString('zh-CN');
+};
+const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const escapeAttr = escapeHtml;
+
+// ---------- GitHub Pages / 静态托管降级 API ----------
+const STATIC_DB_KEY = 'fg_static_api_v1';
+const STATIC_NICKS = ['冷静玩家', '反诈同学', '清醒挑战者', '稳住选手', '认真核验员', '不点链接人', '谨慎观察员'];
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function randomId(prefix) {
+  if (window.crypto && crypto.getRandomValues) {
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    return prefix + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  return prefix + Math.random().toString(36).slice(2, 12);
+}
+
+function staticNick(s) {
+  const v = String(s || '').trim().slice(0, 20);
+  if (v) return v;
+  return STATIC_NICKS[Math.floor(Math.random() * STATIC_NICKS.length)] + Math.floor(Math.random() * 99);
+}
+
+function staticDb() {
+  try {
+    const raw = localStorage.getItem(STATIC_DB_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      parsed.sessions = Array.isArray(parsed.sessions) ? parsed.sessions : [];
+      parsed.levelResults = Array.isArray(parsed.levelResults) ? parsed.levelResults : [];
+      parsed.events = Array.isArray(parsed.events) ? parsed.events : [];
+      parsed.visits = Array.isArray(parsed.visits) ? parsed.visits : [];
+      parsed.levelPlays = Array.isArray(parsed.levelPlays) ? parsed.levelPlays : [];
+      return parsed;
+    }
+  } catch(e) {}
+  return { sessions: [], levelResults: [], events: [], visits: [], levelPlays: [] };
+}
+
+function saveStaticDb(db) {
+  try {
+    db.sessions = (db.sessions || []).slice(-200);
+    db.levelResults = (db.levelResults || []).slice(-1000);
+    db.events = (db.events || []).slice(-1500);
+    db.visits = (db.visits || []).slice(-5000);
+    db.levelPlays = (db.levelPlays || []).slice(-5000);
+    localStorage.setItem(STATIC_DB_KEY, JSON.stringify(db));
+  } catch(e) {}
+}
+
+function findStaticSession(db, sessionId) {
+  return db.sessions.find(s => s.session_id === sessionId);
+}
+
+function staticStats(db) {
+  const byLevel = {};
+  (db.levelPlays || []).forEach(r => {
+    const id = Number(r.level_id);
+    if (!byLevel[id]) byLevel[id] = { level_id:id, participants:0 };
+    byLevel[id].participants++;
+  });
+  const today = new Date().toLocaleDateString('en-CA');
+  const levels = Object.values(byLevel).sort((a,b) => a.level_id - b.level_id);
+  return {
+    ok:true,
+    localOnly:true,
+    online:1,
+    totalVisits:(db.visits || []).length,
+    todayVisits:(db.visits || []).filter(v => v.visit_date === today).length,
+    levels
+  };
+}
+
+async function staticApi(path, method = 'GET', body = null) {
+  const db = staticDb();
+  const route = String(path || '').replace(/\?.*$/, '');
+  const data = body || {};
+
+  if (route === '/api/visit' && method === 'POST') {
+    const visitorId = data.visitorId || getVisitorId();
+    if (data.eventType !== 'heartbeat') {
+      db.visits.push({ visitor_id:visitorId, visit_date:new Date().toLocaleDateString('en-CA'), visited_at:nowIso() });
+    }
+    saveStaticDb(db);
+    return staticStats(db);
+  }
+
+  if (route === '/api/start' && method === 'POST') {
+    const sessionId = randomId('local_');
+    const nickname = staticNick(data.nickname);
+    const row = {
+      session_id:sessionId, nickname, balance:INITIAL_BALANCE, debt:0,
+      completed_count:0, scam_count:0, recovery_used_count:0,
+      total_recovered:0, total_earned:0, total_lost:0,
+      created_at:nowIso(), updated_at:nowIso()
+    };
+    db.sessions.push(row);
+    saveStaticDb(db);
+    return { ok:true, sessionId, nickname, balance:INITIAL_BALANCE, debt:0, localOnly:true };
+  }
+
+  if (route.startsWith('/api/state/')) {
+    const sessionId = decodeURIComponent(route.split('/').pop());
+    const session = findStaticSession(db, sessionId);
+    if (!session) return { ok:false, error:'not_found' };
+    return {
+      ok:true,
+      localOnly:true,
+      session,
+      levels:db.levelResults.filter(r => r.session_id === sessionId),
+      events:db.events.filter(e => e.session_id === sessionId).slice(-500)
+    };
+  }
+
+  if (route === '/api/event' && method === 'POST') {
+    const session = findStaticSession(db, data.sessionId);
+    if (!session) return { ok:false, error:'no_session' };
+    const amountChange = Number(data.amountChange || 0);
+    session.balance = Number(session.balance || 0) + amountChange;
+    if (amountChange > 0) session.total_earned = Number(session.total_earned || 0) + amountChange;
+    if (amountChange < 0) session.total_lost = Number(session.total_lost || 0) - amountChange;
+    if (data.trapCode) session.scam_count = Number(session.scam_count || 0) + 1;
+    session.updated_at = nowIso();
+    db.events.push({
+      session_id:data.sessionId,
+      level_id:data.levelId == null ? null : String(data.levelId),
+      event_type:data.eventType || 'generic',
+      trap_code:data.trapCode || null,
+      trap_name:data.trapName || null,
+      tactic:data.tactic || null,
+      amount_change:amountChange,
+      severity:Number(data.severity || 1),
+      note:data.note || null,
+      created_at:nowIso()
+    });
+    saveStaticDb(db);
+    return { ok:true, balance:session.balance, debt:session.debt || 0, localOnly:true };
+  }
+
+  if (route === '/api/balance' && method === 'POST') {
+    const session = findStaticSession(db, data.sessionId);
+    if (!session) return { ok:false, error:'no_session' };
+    if (Number.isFinite(data.balance)) session.balance = Number(data.balance);
+    if (Number.isFinite(data.debt)) session.debt = Number(data.debt);
+    session.recovery_used_count = Number(session.recovery_used_count || 0) + Number(data.recoveryDelta || 0);
+    session.total_recovered = Number(session.total_recovered || 0) + Number(data.recoveredAmount || 0);
+    session.updated_at = nowIso();
+    saveStaticDb(db);
+    return { ok:true, localOnly:true };
+  }
+
+  if (route === '/api/complete-level' && method === 'POST') {
+    const session = findStaticSession(db, data.sessionId);
+    if (!session) return { ok:false, error:'no_session' };
+    const startBalance = Number(data.startBalance || 0);
+    const endBalance = Number(data.endBalance || 0);
+    db.levelResults.push({
+      session_id:data.sessionId,
+      level_id:Number(data.levelId || 0),
+      start_balance:startBalance,
+      end_balance:endBalance,
+      delta:endBalance - startBalance,
+      is_scammed:data.isScammed ? 1 : 0,
+      trap_count:Number(data.trapCount || 0),
+      main_tactic:data.mainTactic || null,
+      created_at:nowIso()
+    });
+    session.completed_count = Number(session.completed_count || 0) + 1;
+    session.updated_at = nowIso();
+    saveStaticDb(db);
+    return { ok:true, localOnly:true };
+  }
+
+  if (route === '/api/level-play' && method === 'POST') {
+    db.levelPlays.push({
+      visitor_id:data.visitorId || getVisitorId(),
+      session_id:data.sessionId || null,
+      level_id:Number(data.levelId || 0),
+      played_at:nowIso(),
+      play_date:new Date().toLocaleDateString('en-CA')
+    });
+    saveStaticDb(db);
+    return staticStats(db);
+  }
+
+  if (route === '/api/stats') return staticStats(db);
+  if (route === '/api/screen') return staticStats(db);
+  return { ok:false, error:'static_route_not_found', localOnly:true };
+}
+
+// ---------- 自定义弹窗 ----------
+function customAlert(title, msg, btnText = '知道了') {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('customModal');
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+      <div style="background:linear-gradient(160deg,#1a150a,#0d0d0d);border:1px solid rgba(245,197,66,0.3);border-radius:20px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 0 40px rgba(245,197,66,0.15);">
+        <div style="text-align:center;margin-bottom:20px;">
+          ${title ? `<div style="font-size:28px;margin-bottom:8px;">${title}</div>` : ''}
+          <div style="color:#e5e5e5;font-size:14px;line-height:1.6;white-space:pre-wrap;">${msg}</div>
+        </div>
+        <button onclick="customModalResolve(true)" style="width:100%;padding:14px;background:linear-gradient(180deg,#ffd54a,#e0a008);color:#1a1100;font-weight:900;font-size:15px;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 0 #7a5300;">
+          ${btnText}
+        </button>
+      </div>`;
+    window._customModalResolve = resolve;
+  });
+}
+
+function customConfirm(title, msg, okText = '确认', cancelText = '取消') {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('customModal');
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+      <div style="background:linear-gradient(160deg,#1a150a,#0d0d0d);border:1px solid rgba(245,197,66,0.3);border-radius:20px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 0 40px rgba(245,197,66,0.15);">
+        <div style="text-align:center;margin-bottom:20px;">
+          ${title ? `<div style="font-size:22px;margin-bottom:10px;">${title}</div>` : ''}
+          <div style="color:#e5e5e5;font-size:14px;line-height:1.6;white-space:pre-wrap;">${msg}</div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button onclick="customModalResolve(false)" style="flex:1;padding:14px;background:transparent;border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);font-weight:600;font-size:14px;border-radius:12px;cursor:pointer;">${cancelText}</button>
+          <button onclick="customModalResolve(true)" style="flex:1;padding:14px;background:linear-gradient(180deg,#ffd54a,#e0a008);color:#1a1100;font-weight:900;font-size:14px;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 0 #7a5300;">${okText}</button>
+        </div>
+      </div>`;
+    window._customModalResolve = resolve;
+  });
+}
+
+function customModalResolve(val) {
+  const modal = document.getElementById('customModal');
+  modal.style.display = 'none';
+  if (window._customModalResolve) {
+    window._customModalResolve(val);
+    window._customModalResolve = null;
+  }
+}
+
+function customToast(text, duration = 2500) {
+  const el = document.getElementById('customToast');
+  el.textContent = text;
+  el.style.display = 'block';
+  clearTimeout(window._customToastTimer);
+  window._customToastTimer = setTimeout(() => {
+    el.style.display = 'none';
+  }, duration);
+}
+
+// 权限弹窗模拟
+function showPermissionDialog(permissions, callback) {
+  const icons = { '通讯录': '📇', '短信': '💬', '通知': '🔔', '相册': '📷', '摄像头': '📷', '定位': '📍', '麦克风': '🎤' };
+  const permList = permissions.map(p => {
+    const icon = icons[p] || '🔐';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <span style="font-size:24px">${icon}</span>
+      <div style="flex:1;text-align:left;">
+        <div style="color:#fff;font-size:14px;font-weight:600;">${p}</div>
+        <div style="color:#888;font-size:11px;">允许访问</div>
+      </div>
+      <label style="position:relative;width:44px;height:26px;background:#333;border-radius:13px;cursor:pointer;">
+        <input type="checkbox" id="perm_toggle" checked style="opacity:0;width:100%;height:100%;position:absolute;cursor:pointer;z-index:2;" />
+        <span style="position:absolute;left:2px;top:2px;width:22px;height:22px;background:#ffd54a;border-radius:50%;transition:transform 0.2s;"></span>
+      </label>
+    </div>`;
+  }).join('');
+  const modal = document.getElementById('customModal');
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div style="background:linear-gradient(160deg,#1a150a,#0d0d0d);border:1px solid rgba(245,197,66,0.3);border-radius:20px;padding:24px;max-width:340px;width:100%;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:28px;margin-bottom:6px;">📱</div>
+        <div style="font-size:16px;font-weight:700;color:#ffd54a;">需要以下权限</div>
+        <div style="font-size:12px;color:#888;margin-top:4px;">授权后即可获得额外奖励</div>
+      </div>
+      <div style="margin-bottom:20px;">${permList}</div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="customModalResolve(false)" style="flex:1;padding:12px;background:transparent;border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);font-weight:600;font-size:13px;border-radius:10px;cursor:pointer;">拒绝</button>
+        <button onclick="permAccept()" style="flex:1;padding:12px;background:linear-gradient(180deg,#ffd54a,#e0a008);color:#1a1100;font-weight:900;font-size:13px;border:none;border-radius:10px;cursor:pointer;">全部授权</button>
+      </div>
+    </div>`;
+  window._permCallback = callback;
+}
+
+function permAccept() {
+  const modal = document.getElementById('customModal');
+  modal.style.display = 'none';
+  if (window._permCallback) window._permCallback(true);
+  window._permCallback = null;
+}
+
+window.customModalResolve = customModalResolve;
+
+// ---------- 状态 ----------
+const state = {
+  sessionId: null,
+  nickname: '',
+  balance: INITIAL_BALANCE,
+  debt: 0,
+  frozenBonus: 0,
+  pendingReward: 0,
+  completedLevels: {},
+  levelResults: {},
+  currentLevel: null,
+  currentStep: 0,
+  riskEvents: [],
+  transactions: [],
+  traps: [],
+  recoveryUsedCount: 0,
+  totalRecovered: 0,
+  totalEarned: 0,
+  totalLost: 0,
+  startedAt: Date.now(),
+  // 视图
+  view: 'welcome',
+  // 临时数据
+  levelStartBalance: 0,
+  levelTraps: 0,
+  levelMainTactic: null,
+  levelEnded: false,
+  levelLastResult: null,
+  // 关卡内步骤 & 自定义
+  levelStep: 0,
+  levelData: {},
+  // 服务器统计缓存
+  stats: null,
+};
+
+// ---------- 本地持久化 ----------
+function saveLocal() {
+  try {
+    const minimal = {
+      sessionId: state.sessionId, nickname: state.nickname,
+      balance: state.balance, debt: state.debt,
+      completedLevels: state.completedLevels,
+      levelResults: state.levelResults,
+      recoveryUsedCount: state.recoveryUsedCount,
+      totalRecovered: state.totalRecovered,
+      totalEarned: state.totalEarned, totalLost: state.totalLost,
+      traps: state.traps, transactions: state.transactions.slice(-200),
+      startedAt: state.startedAt
+    };
+    localStorage.setItem('fg_state', JSON.stringify(minimal));
+  } catch(e){}
+}
+function loadLocal() {
+  try {
+    const s = localStorage.getItem('fg_state');
+    if (!s) return null;
+    return JSON.parse(s);
+  } catch(e) { return null; }
+}
+
+function getVisitorId() {
+  try {
+    let id = localStorage.getItem('fg_visitor_id');
+    if (!id) {
+      id = randomId('v_');
+      localStorage.setItem('fg_visitor_id', id);
+    }
+    return id;
+  } catch(e) {
+    return randomId('v_');
+  }
+}
+
+async function recordVisit(eventType = 'pageview') {
+  const r = await api('/api/visit', 'POST', { visitorId:getVisitorId(), eventType });
+  if (r && r.ok) state.stats = r;
+  return r;
+}
+
+async function recordLevelPlay(levelId) {
+  const r = await api('/api/level-play', 'POST', {
+    visitorId:getVisitorId(),
+    sessionId:state.sessionId,
+    levelId
+  });
+  if (r && r.ok) state.stats = r;
+  return r;
+}
+
+// ---------- API ----------
+async function api(path, method = 'GET', body = null) {
+  if (forceStaticApi) return staticApi(path, method, body);
+  try {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(API_BASE + path, opts);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const type = r.headers.get('content-type') || '';
+    if (!type.includes('application/json')) throw new Error('Non-JSON response');
+    return await r.json();
+  } catch (e) {
+    console.warn('[api]', path, e);
+    if (!API_BASE) {
+      forceStaticApi = true;
+      return staticApi(path, method, body);
+    }
+    return { ok: false, error: 'network' };
+  }
+}
+
+async function ensureSession(nickname) {
+  const r = await api('/api/start', 'POST', { nickname });
+  if (r && r.ok) {
+    state.sessionId = r.sessionId;
+    state.nickname = r.nickname;
+    state.balance = r.balance;
+    state.debt = r.debt;
+    saveLocal();
+  }
+  return r;
+}
+
+// ---------- 钱包/陷阱 ----------
+function changeMoney(amount, reason, trapCode = null, floatText = null) {
+  if (!amount) return;
+  state.balance += amount;
+  if (amount > 0) state.totalEarned += amount;
+  else state.totalLost += -amount;
+  state.transactions.push({
+    levelId: state.currentLevel, amount, reason: reason || '', balanceAfter: state.balance, ts: Date.now()
+  });
+  showCoin(amount, floatText);
+  if (state.sessionId) {
+    api('/api/event', 'POST', {
+      sessionId: state.sessionId,
+      levelId: state.currentLevel || null,
+      eventType: amount > 0 ? 'gain' : 'loss',
+      trapCode, amountChange: amount, note: reason || '',
+      severity: trapCode ? 2 : 1
+    });
+  }
+  saveLocal();
+}
+
+function recordTrap(t) {
+  // {levelId, trapCode, trapName, tactic, severity, amountChange, explanation}
+  state.traps.push({ ...t, ts: Date.now() });
+  state.levelTraps++;
+  if (!state.levelMainTactic) state.levelMainTactic = t.tactic;
+  if (state.sessionId) {
+    api('/api/event', 'POST', {
+      sessionId: state.sessionId,
+      levelId: t.levelId || state.currentLevel || null,
+      eventType: 'trap',
+      trapCode: t.trapCode, trapName: t.trapName, tactic: t.tactic,
+      amountChange: t.amountChange || 0, severity: t.severity || 2,
+      note: t.explanation || ''
+    });
+    if (t.amountChange) {
+      state.balance += t.amountChange;
+      if (t.amountChange > 0) state.totalEarned += t.amountChange;
+      else state.totalLost += -t.amountChange;
+      state.transactions.push({
+        levelId: t.levelId || state.currentLevel, amount: t.amountChange,
+        reason: t.trapName || t.tactic || '', balanceAfter: state.balance, ts: Date.now()
+      });
+      showCoin(t.amountChange);
+    }
+  }
+  saveLocal();
+}
+
+function modifyDebt(delta) {
+  state.debt += delta;
+  if (state.sessionId) {
+    api('/api/balance', 'POST', { sessionId: state.sessionId, balance: state.balance, debt: state.debt });
+  }
+  saveLocal();
+}
+
+function recordRecovery(amount) {
+  state.recoveryUsedCount++;
+  state.totalRecovered += Math.max(0, amount|0);
+  if (state.sessionId) {
+    api('/api/balance', 'POST', {
+      sessionId: state.sessionId, balance: state.balance, debt: state.debt,
+      recoveryDelta: 1, recoveredAmount: Math.max(0, amount|0)
+    });
+  }
+  saveLocal();
+}
+
+async function completeLevel(levelId, mainTactic) {
+  const startBalance = state.levelStartBalance;
+  const endBalance = state.balance;
+  const isScammed = state.levelTraps > 0 && (endBalance - startBalance) < 0 ? 1 : 0;
+  state.completedLevels[levelId] = true;
+  state.levelResults[levelId] = {
+    levelId,
+    startBalance, endBalance,
+    delta: endBalance - startBalance,
+    isScammed,
+    trapCount: state.levelTraps,
+    mainTactic: mainTactic || state.levelMainTactic,
+    ts: Date.now()
+  };
+  state.levelLastResult = state.levelResults[levelId];
+  saveLocal();
+  setView('result');
+  if (state.sessionId) {
+    api('/api/complete-level', 'POST', {
+      sessionId: state.sessionId,
+      levelId, startBalance, endBalance,
+      isScammed, trapCount: state.levelTraps,
+      mainTactic: mainTactic || state.levelMainTactic
+    });
+  }
+}
+
+// ---------- UI 工具 ----------
+function showCoin(amount, floatText = null) {
+  if (!amount) return;
+  const div = document.createElement('div');
+  div.className = 'coin font-display';
+  div.textContent = floatText || ((amount > 0 ? '+' : '') + amount.toLocaleString('zh-CN'));
+  div.style.color = amount > 0 ? '#fcd34d' : '#fca5a5';
+  div.style.textShadow = amount > 0 ? '0 0 12px #fbbf24' : '0 0 12px #ef4444';
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 1500);
+}
+
+function toast(text, ms = 2200) {
+  customToast(text, ms);
+}
+
+function setView(v) {
+  state.view = v;
+  state.currentLevel = (v === 'level') ? state.currentLevel : null;
+  if (v !== 'level') { state.levelStep = 0; state.levelData = {}; }
+  saveLocal();
+  render();
+}
+
+function setLevelStep(step) {
+  state.levelStep = step;
+  render();
+}
+window.setLevelStep = setLevelStep;
+
+// ---------- 顶部钱包栏 ----------
+function topBar() {
+  const net = state.balance - state.debt;
+  return `
+    <div class="sticky top-0 z-20 backdrop-blur bg-black/70 border-b border-amber-500/20 px-4 py-2.5">
+      <div class="flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-zinc-500">玩家</span>
+          <span class="font-medium text-amber-300">${escapeHtml(state.nickname || '匿名')}</span>
+        </div>
+        <div class="flex items-center gap-3 font-mono">
+          <div><span class="text-zinc-500 text-[10px]">余额</span>
+            <span class="font-bold ${state.balance>=0?'text-amber-300':'text-rose-400'} ml-1">${fmt(state.balance)}</span></div>
+          ${state.debt>0?`<div><span class="text-zinc-500 text-[10px]">负债</span>
+            <span class="font-bold text-rose-400 ml-1">${fmt(state.debt)}</span></div>`:''}
+          <div><span class="text-zinc-500 text-[10px]">净资产</span>
+            <span class="font-bold ${net>=0?'text-emerald-400':'text-rose-400'} ml-1">${fmt(net)}</span></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ============================================================================
+//  关卡定义
+// ============================================================================
+const LEVELS = [
+  { id:1, title:'幸运旋涡', subtitle:'每天首抽必中 388', difficulty:2 },
+  { id:2, title:'连胜挑战', subtitle:'3 连胜返 2680', difficulty:3 },
+  { id:3, title:'内场代抢', subtitle:'抢不到退费', difficulty:3 },
+  { id:4, title:'宝箱风暴', subtitle:'传说宝箱保底', difficulty:2 },
+  { id:5, title:'校园邮箱', subtitle:'账单链接领补贴', difficulty:2 },
+  { id:6, title:'红黑一念', subtitle:'猜中即翻倍', difficulty:3 },
+  { id:7, title:'牌桌新星', subtitle:'注册送 3000 筹码', difficulty:4 },
+  { id:8, title:'金牌操盘手', subtitle:'普特币高风险投资', difficulty:4 },
+  { id:9, title:'甜蜜陷阱', subtitle:'杀猪盘关系养成', difficulty:4 },
+  { id:10, title:'神秘内测', subtitle:'新游限量体验', difficulty:3 }
+];
+
+// ============================================================================
+//  欢迎页
+// ============================================================================
+function renderWelcome() {
+  const presets = ['上头的松鼠','冷静的刺猬','想回本的熊猫','差点暴富的狐狸','一把梭哈的鸽子','复活三次的海豹'];
+  const presetHtml = presets.map(p=>
+    `<button onclick="document.getElementById('nickInput').value='${p}'"
+       class="px-3 py-1.5 rounded-full bg-white/5 border border-amber-500/20 text-xs text-amber-200">${p}</button>`).join('');
+  return `
+    <div class="min-h-screen flex flex-col px-6 pt-8 pb-12">
+      <div class="text-center mt-8 mb-6">
+        <div class="text-[10px] tracking-[0.4em] text-amber-500 mb-3">CAMPUS · CHALLENGE</div>
+        <h1 class="text-4xl font-black neon-text font-display mb-2">上当模拟器</h1>
+        <p class="text-zinc-400 text-sm">你能带着多少钱离场？</p>
+      </div>
+
+      <div class="card p-5 mb-5 text-center">
+        <div class="text-[11px] text-zinc-500 mb-1">你的初始资金</div>
+        <div class="text-5xl font-black neon-text font-mono my-2">¥10,000</div>
+        <div class="text-xs text-amber-200/80">通关 10 关挑战 · 全凭本事 · 实时统计</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="text-xs text-zinc-400 mb-2 block">输入你的昵称（匿名）</label>
+        <input id="nickInput" type="text" maxlength="20" placeholder="想给自己起个什么名字？"
+          class="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-amber-500/30 text-white placeholder-zinc-600 outline-none focus:border-amber-400" />
+        <div class="flex flex-wrap gap-2 mt-3">${presetHtml}</div>
+      </div>
+
+      <div class="mt-6 grid grid-cols-3 gap-2 mb-6">
+        <div class="card p-3 text-center">
+          <div class="text-amber-300 text-2xl font-display">10</div>
+          <div class="text-[10px] text-zinc-500">关卡</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="text-amber-300 text-2xl font-display">5</div>
+          <div class="text-[10px] text-zinc-500">榜单</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="text-amber-300 text-2xl font-display">∞</div>
+          <div class="text-[10px] text-zinc-500">回血</div>
+        </div>
+      </div>
+
+      <button onclick="onStart()" class="btn-pop py-4 w-full text-lg glow">
+        开 始 挑 战 →
+      </button>
+      <p class="text-center text-[10px] text-zinc-600 mt-4">本活动为反诈教育模拟，不涉及真实资金</p>
+    </div>`;
+}
+
+async function onStart() {
+  const nick = ($('nickInput') && $('nickInput').value || '').trim();
+  const r = await ensureSession(nick);
+  if (r && r.ok) {
+    setView('menu');
+  } else {
+    // 离线降级：直接本地玩
+    state.sessionId = 'local_' + Math.random().toString(36).slice(2, 10);
+    state.nickname = nick || '匿名玩家';
+    state.balance = INITIAL_BALANCE;
+    saveLocal();
+    setView('menu');
+  }
+}
+
+// ============================================================================
+//  菜单页
+// ============================================================================
+async function loadStats() {
+  try {
+    const r = await api('/api/stats');
+    if (r && r.ok) state.stats = r;
+  } catch(e){}
+}
+
+function renderMenu() {
+  const stats = state.stats || { levels: [], online:0, totalVisits:0, todayVisits:0 };
+  const levelStat = (id) => stats.levels.find(x => x.level_id === id) || {};
+  const cards = LEVELS.map(L => {
+    const r = state.levelResults[L.id];
+    const s = levelStat(L.id);
+    const completed = !!r;
+    const dotClass = i => i <= L.difficulty ? 'bg-amber-400' : 'bg-zinc-700';
+    const personalLabel = !completed ? '<span class="text-zinc-500">未挑战</span>'
+      : (r.delta > 0 ? `<span class="text-emerald-400">+${fmt(r.delta).replace('¥','')}</span>`
+         : `<span class="text-rose-400">${fmt(r.delta).replace('¥','')}</span>`);
+    const realSimBadge = [2,4,6,8].includes(L.id)
+      ? '<span class="ml-2 align-middle text-[9px] font-normal text-amber-300/80 border border-amber-500/25 rounded px-1 py-0.5">真实模拟</span>'
+      : '';
+    return `
+      <button onclick="enterLevel(${L.id})" class="card p-4 text-left hover:border-amber-300/50 active:scale-[0.98] transition w-full">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <span class="font-display text-amber-400 text-xs">LV.${String(L.id).padStart(2,'0')}</span>
+            <span class="text-xs ${completed ? 'text-emerald-400':'text-zinc-500'}">${completed?'✓ 已闯':'NEW'}</span>
+          </div>
+          <div class="flex gap-0.5">
+            ${[1,2,3,4,5].map(i=>`<span class="w-1 h-2.5 rounded-sm ${dotClass(i)}"></span>`).join('')}
+          </div>
+        </div>
+        <div class="text-base font-bold text-white mb-1">${L.title}${realSimBadge}</div>
+        <div class="text-[11px] text-zinc-400 mb-2">${L.subtitle}</div>
+        <div class="flex items-center justify-between text-[10px] text-zinc-500">
+          <div>个人 ${personalLabel}</div>
+          <div class="flex gap-2">
+            ${s.participants?`<span>${s.participants}人次游玩</span>`:''}
+          </div>
+        </div>
+      </button>`;
+  }).join('');
+
+  const completedCount = LEVELS.filter(L => state.completedLevels[L.id]).length;
+  return `
+    ${topBar()}
+    <div class="px-4 pt-4 pb-32">
+      <div class="card p-5 mb-5 relative overflow-hidden">
+        <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-amber-500/10 blur-2xl"></div>
+        <div class="text-[11px] text-zinc-500 mb-1">当前余额 / 净资产</div>
+        <div class="flex items-end gap-3">
+          <div class="text-4xl font-black font-mono ${state.balance>=0?'neon-text':'red-text'}">${fmt(state.balance)}</div>
+          ${state.debt>0?`<div class="text-sm font-mono text-rose-400 mb-1">负债 ${fmt(state.debt)}</div>`:''}
+        </div>
+        <div class="flex items-center justify-between mt-3 text-xs">
+          <span class="text-zinc-400">已闯 ${completedCount}/10</span>
+          <button onclick="setView('recovery')" class="text-amber-300 underline-offset-2 underline decoration-dashed">
+            🩹 资金恢复中心
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 mb-5">
+        <div class="card p-3 text-center">
+          <div class="text-[10px] text-zinc-500 mb-1">当前在线</div>
+          <div class="text-xl font-display text-emerald-300">${stats.online || 0}</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="text-[10px] text-zinc-500 mb-1">总访问量</div>
+          <div class="text-xl font-display text-amber-300">${stats.totalVisits || 0}</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="text-[10px] text-zinc-500 mb-1">今日访问</div>
+          <div class="text-xl font-display text-cyan-300">${stats.todayVisits || 0}</div>
+        </div>
+      </div>
+
+      ${state.balance < 1000 ? `
+      <div class="card p-3 mb-4 border-amber-500/40 bg-amber-500/10">
+        <div class="text-xs text-amber-200">💡 资金不足？点上方"资金恢复中心"领取补给金。</div>
+      </div>` : ''}
+
+      <div class="text-[10px] tracking-[0.3em] text-amber-500 mb-2 px-1">CHAPTERS</div>
+      <div class="grid grid-cols-2 gap-3">
+        ${cards}
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mt-6">
+        <button onclick="setView('report')" class="card p-3 text-center">
+          <div class="text-2xl mb-1">📋</div>
+          <div class="text-[11px] text-zinc-300">我的报告</div>
+        </button>
+        <button onclick="goScreen()" class="card p-3 text-center">
+          <div class="text-2xl mb-1">📺</div>
+          <div class="text-[11px] text-zinc-300">活动大屏</div>
+        </button>
+      </div>
+    </div>`;
+}
+
+function enterLevel(id) {
+  state.currentLevel = id;
+  state.levelStartBalance = state.balance;
+  state.levelTraps = 0;
+  state.levelMainTactic = null;
+  state.levelEnded = false;
+  state.levelStep = 0;
+  state.levelData = {};
+  state.view = 'level';
+  saveLocal();
+  recordLevelPlay(id);
+  $('app').innerHTML = renderLevel(id);
+}
+
+async function goScreen() {
+  const r = await api('/api/screen');
+  if (r && r.ok) state.stats = r;
+  setView('screen');
+  // 大屏每 5 秒刷新
+  if (window._screenTimer) clearInterval(window._screenTimer);
+  window._screenTimer = setInterval(async () => {
+    const r2 = await api('/api/screen');
+    if (r2 && r2.ok && state.view === 'screen') {
+      state.stats = r2;
+      render();
+    }
+  }, 5000);
+}
+
+// ============================================================================
+//  关卡分发
+// ============================================================================
+function renderLevel(id) {
+  const L = LEVELS.find(x => x.id === id);
+  if (!L) return renderMenu();
+  const renderer = LEVEL_RENDERERS[id];
+  if (!renderer) return renderMenu();
+  const realSimBadge = [2,4,6,8].includes(id)
+    ? '<div class="text-[9px] text-amber-300/80 mt-0.5 tracking-wider">真实模拟</div>'
+    : '';
+  return `
+    ${topBar()}
+    <div class="px-4 py-3 flex items-center gap-2 border-b border-amber-500/10">
+      <button onclick="quitLevel()" class="text-xs text-zinc-400 px-2 py-1">← 离场</button>
+      <div class="flex-1 text-center">
+        <div class="text-[10px] text-zinc-500">LV.${String(id).padStart(2,'0')}</div>
+        <div class="text-sm font-bold text-amber-300">${L.title}</div>
+        ${realSimBadge}
+      </div>
+      <div class="text-xs text-zinc-500">${state.levelStep+1}步</div>
+    </div>
+    ${renderer()}`;
+}
+
+async function quitLevel() {
+  if (state.levelEnded) {
+    setView('menu');
+    return;
+  }
+  // 提示挽留
+  const lost = state.levelStartBalance - state.balance;
+  const msg = lost > 0
+    ? `你已经亏了 ${fmt(lost)}，再玩一把可能就回本了，真的退？`
+    : `就快通关了，你确定要走？`;
+  if (await customConfirm('⚠ 确认离场', msg + '\n\n（教学提示：现实中，"再玩一把就能回本"是骗子最爱的钩子。）', '确认离场', '继续闯关')) {
+    state.levelEnded = true;
+    await completeLevel(state.currentLevel, state.levelMainTactic || '主动离场');
+  }
+}
+
+// ============================================================================
+//  通用关卡组件
+// ============================================================================
+function levelHeader(title, hintColor='amber') {
+  return `<div class="text-center pt-4 pb-2">
+    <div class="text-xs text-${hintColor}-400 tracking-wider">${escapeHtml(title)}</div>
+  </div>`;
+}
+
+function bigBtn(text, onclick, kind='pop') {
+  const cls = kind === 'red' ? 'btn-red' : kind === 'ghost' ? 'btn-ghost' : 'btn-pop';
+  return `<button type="button" data-action="${escapeAttr(onclick)}" class="${cls} w-full py-4 my-2">${escapeHtml(text)}</button>`;
+}
+
+document.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-action]');
+  if (!button) return;
+  event.preventDefault();
+  const action = button.getAttribute('data-action');
+  if (!action) return;
+  try {
+    runButtonAction(action);
+  } catch (err) {
+    console.error('[button action failed]', action, err);
+    toast('按钮执行失败，请刷新后重试');
+  }
+});
+
+function runButtonAction(action) {
+  const match = String(action).trim().match(/^([A-Za-z_$][\w$]*)\((.*)\)$/s);
+  if (!match) throw new Error('Invalid action: ' + action);
+  const fn = window[match[1]];
+  if (typeof fn !== 'function') throw new Error('Unknown action: ' + match[1]);
+  fn(...parseActionArgs(match[2]));
+}
+
+function parseActionArgs(source) {
+  const text = String(source || '').trim();
+  if (!text) return [];
+  const args = [];
+  let current = '';
+  let quote = '';
+  let escaped = false;
+  for (const ch of text) {
+    if (escaped) {
+      current += ch;
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      current += ch;
+      escaped = true;
+      continue;
+    }
+    if (quote) {
+      current += ch;
+      if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      current += ch;
+      quote = ch;
+      continue;
+    }
+    if (ch === ',') {
+      args.push(parseActionArg(current));
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  if (quote) throw new Error('Unclosed quote in action args');
+  args.push(parseActionArg(current));
+  return args;
+}
+
+function parseActionArg(value) {
+  const text = String(value || '').trim();
+  if (!text) return undefined;
+  const first = text[0];
+  const last = text[text.length - 1];
+  if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+    return text.slice(1, -1).replace(/\\(["'\\])/g, '$1');
+  }
+  if (/^-?\d+(\.\d+)?$/.test(text)) return Number(text);
+  if (text === 'true') return true;
+  if (text === 'false') return false;
+  if (text === 'null') return null;
+  throw new Error('Unsupported action arg: ' + text);
+}
+
+function fakeStat(text) {
+  return `<div class="text-[11px] text-zinc-500 text-center my-2">${escapeHtml(text)}</div>`;
+}
+
+// 末关结束（通用收尾）
+function finishCurrent(tactic) {
+  state.levelEnded = true;
+  completeLevel(state.currentLevel, tactic || state.levelMainTactic);
+}
+window.finishCurrent = finishCurrent;
+
+// ============================================================================
+//  LEVEL 1: 幸运旋涡（助力抽卡版）
+// ============================================================================
+const LEVEL_RENDERERS = {};
+
+LEVEL_RENDERERS[1] = function() {
+  const ld = state.levelData;
+  if (ld.totalSpins == null) {
+    ld.totalSpins = 0;
+    ld.progress = 0;
+    ld.claimable = 0;
+    ld.angle = 0;
+    ld.boosts = 0;
+    ld.shownTinyGap = false;
+    ld.lastResult = null;
+    ld.multiplier = 1;
+    ld.totalPaid = 0;
+    ld.doubleAttempts = 0;
+    ld.phase = 0;
+    ld.stageTraps = {};
+    ld.extraFreeDraws = 0;
+    ld.nextDouble = false;
+    ld.bonusLuck = 0;
+    ld.lastWheelPrize = null;
+  }
+  ld.stageTraps = ld.stageTraps || {};
+  ld.extraFreeDraws = ld.extraFreeDraws || 0;
+  ld.nextDouble = !!ld.nextDouble;
+  ld.bonusLuck = ld.bonusLuck || 0;
+  const stepView = state.levelStep;
+
+  if (stepView === 0) {
+    const pDisplay = level1FormatProgress(ld);
+    const gapDisplay = level1FormatGap(ld);
+    const cashDisplay = (ld.claimable * ld.multiplier).toLocaleString();
+    const pctWidth = Math.min(99.8, ld.progress);
+    const nextSpin = ld.totalSpins + 1;
+    const stage = level1SpinStage(nextSpin);
+    const luckyValue = level1LuckyValue(ld);
+    const wheelPrizes = level1WheelPrizes();
+    const activeBuffs = [];
+    if (ld.nextDouble) activeBuffs.push('下抽翻倍');
+    if (ld.extraFreeDraws > 0) activeBuffs.push(`免费抽 x${ld.extraFreeDraws}`);
+    if (!activeBuffs.length && ld.lastWheelPrize) activeBuffs.push(`上次 ${ld.lastWheelPrize}`);
+    return `<div class="px-5 pt-2 pb-8">
+      ${levelHeader('🎡 幸运旋涡 · 再转一次就能提现')}
+      <div class="card p-5 my-3 text-center">
+        <div class="flex flex-col min-[431px]:flex-row items-center justify-center gap-3">
+          <div class="wheel-shell shrink-0">
+            <div id="level1Wheel" class="wheel"
+              style="transform:rotate(${ld.angle}deg);background:conic-gradient(from -90deg,#fff4df 0deg 45deg,#ffc95c 45deg 90deg,#fffaf0 90deg 135deg,#ff8940 135deg 180deg,#fff1dc 180deg 225deg,#ffd24f 225deg 270deg,#fff8ec 270deg 315deg,#ff7040 315deg 360deg);">
+              ${wheelPrizes.map((prize,i)=>
+                `<div class="wheel-label" style="--a:${i*45+22.5}deg"><span><b>${escapeHtml(prize.icon)}</b><em>${escapeHtml(prize.label)}</em></span></div>`).join('')}
+            </div>
+            <div class="wheel-center flex flex-col items-center justify-center">
+              <div class="text-[11px] text-orange-500 font-bold leading-none mb-1">提现最终阶段</div>
+              <div class="wheel-draw-btn">抽奖 <span class="text-sm rounded-full bg-violet-500 px-2 py-0.5">${Math.min(15,nextSpin)}</span></div>
+              <div class="text-[11px] text-violet-600 font-bold">还剩 ${Math.max(0,16-nextSpin)} 次</div>
+              <div class="wheel-pool"><span class="text-xs">奖池</span><strong>¥${cashDisplay}</strong></div>
+              <div class="wheel-luck"><span>幸运值</span><span class="text-yellow-300">${luckyValue}</span></div>
+              ${activeBuffs.length ? `<div class="wheel-buff-row">${activeBuffs.slice(0,2).map(text=>`<span class="wheel-buff">${escapeHtml(text)}</span>`).join('')}</div>` : ''}
+            </div>
+            <div class="wheel-pointer"></div>
+          </div>
+          <div class="wheel-progress-mini text-left">
+            <div class="text-[10px] tracking-widest text-zinc-500">离提现还差</div>
+            <div class="font-mono text-amber-300 text-xl font-bold leading-none mt-1">${gapDisplay}%</div>
+            <div class="h-2 bg-zinc-800 rounded-full mt-3 overflow-hidden relative">
+              <div class="h-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-500 rounded-full" style="width:${pctWidth}%"></div>
+            </div>
+            <div class="flex items-center justify-between text-[10px] text-zinc-500 mt-2">
+              <span>当前 <b class="text-amber-300 font-mono">${pDisplay}%</b></span>
+              <span>幸运值 <b class="text-amber-200 font-mono">${luckyValue}</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 text-xs text-zinc-500">已有 <span class="text-amber-300 font-mono">12,847</span> 名同学参与本期活动</div>
+      </div>
+      <div class="card p-3 mb-3 bg-orange-500/10 border-orange-400/40">
+        <div class="text-xs text-orange-200 font-bold">${escapeHtml(stage.title)}</div>
+        <div class="text-[11px] text-zinc-300 mt-1 leading-relaxed">${escapeHtml(level1StageHype(ld))}</div>
+      </div>
+      ${ld.multiplier > 1 ? `<div class="card p-3 mb-3 bg-rose-500/10 border-rose-500/40 text-center">
+        <div class="text-xs text-rose-300">🔥 奖池翻倍中 · 当前 <span class="font-bold text-lg text-amber-300">${ld.multiplier}x</span></div>
+        <div class="text-[10px] text-zinc-400">提现金额 = ¥${ld.claimable.toLocaleString()} × ${ld.multiplier} = <b class="text-amber-300">¥${cashDisplay}</b></div>
+      </div>` : ''}
+      ${nextSpin <= 15
+        ? bigBtn(level1SpinButtonText(ld), "level1Spin()", (stage.cost > 0 && !ld.extraFreeDraws) ? 'red' : 'pop')
+        : ''}
+      ${ld.totalSpins > 0
+        ? `<div class="card p-3 my-2 bg-amber-500/10 border-amber-500/40">
+            <div class="text-xs text-amber-200">🔥 您已超过 ${Math.min(98, 73 + ld.totalSpins*3)}% 的人，还差 <span class="font-mono text-amber-300">${gapDisplay}%</span> 即可提现 ¥${cashDisplay}</div>
+          </div>` : ''}
+      ${ld.progress >= 99.999 || nextSpin > 15
+        ? bigBtn(`💰 立即提现 ¥${cashDisplay}`, "level1Withdraw()", 'red')
+        : ''}
+      ${ld.totalSpins > 0 ? bigBtn('看穿套路，停手离场', 'finishCurrent("差点中奖")', 'ghost') : ''}
+      <div class="card p-3 mt-3 bg-zinc-900/50">
+        <div class="text-[10px] tracking-widest text-amber-500 mb-1">教学提示</div>
+        <div class="text-xs text-zinc-300 leading-relaxed">本关模拟"现金大转盘"骗局。进度从大额跳涨制造兴奋，到最后 0.01% 无限逼近——你以为差一点，其实永远差一点。</div>
+      </div>
+      ${fakeStat('👀 刚刚 27 名同学提现成功 · 当前 81% 玩家选择继续转')}
+    </div>`;
+  }
+  return '';
+};
+
+// PDD式进度显示：根据阶段动态决定小数位数
+function level1FormatProgress(ld) {
+  const p = ld.progress;
+  if (p < 90) return p.toFixed(0);
+  if (p < 99) return p.toFixed(1);
+  if (p < 99.9) return p.toFixed(2);
+  if (p < 99.99) return p.toFixed(3);
+  if (p < 99.999) return p.toFixed(4);
+  return p.toFixed(5);
+}
+
+function level1FormatGap(ld) {
+  const gap = 100 - ld.progress;
+  if (gap >= 10) return gap.toFixed(0);
+  if (gap >= 1) return gap.toFixed(1);
+  if (gap >= 0.1) return gap.toFixed(2);
+  if (gap >= 0.01) return gap.toFixed(3);
+  if (gap >= 0.001) return gap.toFixed(4);
+  return gap.toFixed(5);
+}
+
+function level1SpinStage(spinNo) {
+  if (spinNo <= 3) return { key:'free', cost:0, title:'新人免费抽奖 · 系统提示回本率暴增' };
+  if (spinNo <= 5) return { key:'one', cost:1, title:'提现最终阶段 · 仅需 ¥1 激活通道' };
+  if (spinNo <= 10) return { key:'five', cost:5, title:'大奖锁定阶段 · ¥5 补足最后进度' };
+  if (spinNo <= 15) return { key:'ten', cost:10, title:'最终审核阶段 · ¥10 完成提现验证' };
+  return { key:'done', cost:null, title:'提现资格已生成 · 请立即验证' };
+}
+
+function level1WheelPrizes() {
+  return [
+    { icon:'¥88', label:'金额+88', type:'cash', amount:88 },
+    { icon:'🍀', label:'幸运+5', type:'luck', luck:5 },
+    { icon:'x2', label:'下抽翻倍', type:'double' },
+    { icon:'免', label:'免费一次', type:'free' },
+    { icon:'¥188', label:'金额+188', type:'cash', amount:188 },
+    { icon:'🍀', label:'幸运+10', type:'luck', luck:10 },
+    { icon:'x2', label:'下抽翻倍', type:'double' },
+    { icon:'¥288', label:'金额+288', type:'cash', amount:288 }
+  ];
+}
+
+function level1SpinButtonText(ld) {
+  const spinNo = ld.totalSpins + 1;
+  const stage = level1SpinStage(spinNo);
+  if (stage.cost === 0) return `🎁 免费抽奖 ${spinNo}/3`;
+  if ((ld.extraFreeDraws || 0) > 0) return `🎁 免费抽一次 · 原价 ¥${stage.cost}`;
+  return `🎡 ¥${stage.cost} 抽奖 · ${spinNo}/15`;
+}
+
+function level1LuckyValue(ld) {
+  const value = 99 + Math.floor((ld.totalSpins || 0) * 1.4) + (ld.bonusLuck || 0);
+  return value.toLocaleString();
+}
+
+function level1StageHype(ld) {
+  const spinNo = ld.totalSpins + 1;
+  if (spinNo <= 3) return '系统已为你保留新人资格，免费抽完 3 次即可进入提现最终阶段。';
+  if (spinNo <= 5) return '你已进入提现最终阶段，页面提示只差一次小额激活，¥1 抽奖后进度将明显推进。';
+  if (spinNo <= 10) return '奖金池已锁定，系统正在补齐小数点后的提现进度；放弃会清空当前幸运值。';
+  if (spinNo <= 15) return '最后审核倒计时：完成本阶段即可生成提现按钮，已有大量用户在此阶段成功提现。';
+  return '提现按钮已生成，但平台会继续设置流水、保证金和风控验证。';
+}
+
+function level1VisibleProgressStep(p) {
+  if (p < 90) return 0.8;
+  if (p < 99) return 0.12;
+  if (p < 99.9) return 0.018;
+  if (p < 99.99) return 0.002;
+  if (p < 99.999) return 0.0002;
+  return 0.00002;
+}
+
+function level1SetProgressAtLeast(ld, candidate, cap = 99.9999) {
+  const p = ld.progress || 0;
+  const visibleNext = p + level1VisibleProgressStep(p);
+  ld.progress = Math.min(cap, Math.max(candidate, visibleNext));
+}
+
+function level1ApplyStageProgress(ld, spinNo) {
+  const p = ld.progress || 0;
+  if (spinNo === 1) {
+    level1SetProgressAtLeast(ld, 62 + Math.random() * 5);
+    ld.claimable = 388;
+    return;
+  }
+  if (spinNo === 2) { level1SetProgressAtLeast(ld, 84 + Math.random() * 4); return; }
+  if (spinNo === 3) { level1SetProgressAtLeast(ld, 95.6 + Math.random() * 1.2); return; }
+  if (spinNo === 4) { level1SetProgressAtLeast(ld, 98.4 + Math.random() * 0.35); return; }
+  if (spinNo === 5) { level1SetProgressAtLeast(ld, 99.08 + Math.random() * 0.22); return; }
+  if (spinNo <= 10) {
+    const targets = [99.43, 99.62, 99.78, 99.88, 99.94];
+    level1SetProgressAtLeast(ld, targets[spinNo - 6] + Math.random() * 0.025);
+    return;
+  }
+  if (spinNo <= 15) {
+    const targets = [99.972, 99.986, 99.993, 99.997, 99.9992];
+    level1SetProgressAtLeast(ld, targets[spinNo - 11] + Math.random() * 0.0006);
+    return;
+  }
+  level1SetProgressAtLeast(ld, p + 0.00005);
+}
+
+function level1ApplyWheelPrize(ld, prize) {
+  if (!prize) return '';
+  ld.lastWheelPrize = `${prize.icon} ${prize.label}`;
+  if (prize.type === 'cash') {
+    ld.claimable += prize.amount;
+    return `金额+¥${prize.amount}`;
+  }
+  if (prize.type === 'luck') {
+    ld.bonusLuck += prize.luck;
+    return `幸运值+${prize.luck}`;
+  }
+  if (prize.type === 'double') {
+    ld.nextDouble = true;
+    return '下抽翻倍已激活';
+  }
+  if (prize.type === 'free') {
+    ld.extraFreeDraws += 1;
+    return '获得免费抽一次';
+  }
+  return '';
+}
+
+function level1RecordStageTrap(ld, stage, spinNo) {
+  ld.stageTraps = ld.stageTraps || {};
+  if (stage.cost <= 0 || ld.stageTraps[stage.key]) return;
+  ld.stageTraps[stage.key] = true;
+  recordTrap({ levelId:1, trapCode:'L1_STAGE_PAY', trapName:`${stage.cost}元阶段抽奖`, tactic:'阶梯充值', severity:2,
+    explanation:`平台先给免费进度，再把抽奖费从 ¥${stage.cost} 做成看似很小的门槛，让你觉得离提现只差最后一步。` });
+}
+
+// PDD式进度跳跃逻辑
+function level1ApplySpin(mode, chargedCost = 0, prizeIndex = null, usedRewardFreeDraw = false) {
+  const ld = state.levelData;
+  const spinNo = ld.totalSpins + 1;
+  const hadDouble = mode === 'draw' && !!ld.nextDouble;
+  if (hadDouble) ld.nextDouble = false;
+  ld.totalSpins++;
+
+  if (mode === 'draw') {
+    const beforeClaimable = ld.claimable || 0;
+    level1ApplyStageProgress(ld, spinNo);
+    if (ld.claimable <= 0) ld.claimable = 388;
+    ld.claimable += Math.floor(8 + Math.random() * 26);
+    const prize = level1WheelPrizes()[prizeIndex];
+    const prizeText = level1ApplyWheelPrize(ld, prize);
+    if (hadDouble) {
+      const claimGain = Math.max(0, (ld.claimable || 0) - beforeClaimable);
+      ld.claimable += claimGain;
+    }
+    if (chargedCost > 0) ld.totalPaid += chargedCost;
+    const gapStr = level1FormatGap(ld);
+    const extraText = [
+      prizeText,
+      hadDouble ? '本抽金额已翻倍' : '',
+      usedRewardFreeDraw ? '奖励免单' : ''
+    ].filter(Boolean).join(' · ');
+    if (spinNo <= 3) toast(`🎉 ${extraText || '免费抽中奖池碎片'}！还差 ${gapStr}%`);
+    else if (spinNo <= 5) toast(`${extraText || '提现通道已激活'}，还差 ${gapStr}%`);
+    else if (spinNo <= 10) toast(`${extraText || '大奖已锁定'}，还差 ${gapStr}%`);
+    else toast(`${extraText || '最终审核推进中'}，还差 ${gapStr}%`);
+  } else if (mode === 'free') {
+    changeMoney(0, '首转必中（仅计入抽奖账户）');
+    ld.progress = 60 + Math.random() * 10;
+    ld.claimable = 388;
+    toast('🎉 恭喜获得 ¥388 现金！继续转动即可提现');
+  } else if (mode === 'boost' || mode === 'premium' || mode === 'tier') {
+    const p = ld.progress;
+    let jump;
+    if (p < 80) {
+      jump = 8 + Math.random() * 12;
+    } else if (p < 95) {
+      jump = 2 + Math.random() * 5;
+    } else if (p < 99) {
+      jump = 0.5 + Math.random() * 2;
+    } else if (p < 99.9) {
+      jump = 0.05 + Math.random() * 0.15;
+      if (mode === 'tier') jump *= 1.5;
+      if (mode === 'premium') jump *= 1.2;
+    } else if (p < 99.99) {
+      jump = 0.005 + Math.random() * 0.015;
+      if (mode === 'tier') jump *= 1.5;
+      if (mode === 'premium') jump *= 1.2;
+    } else if (p < 99.999) {
+      jump = 0.0005 + Math.random() * 0.0015;
+      if (mode === 'tier') jump *= 1.5;
+      if (mode === 'premium') jump *= 1.2;
+    } else {
+      jump = 0.00005 + Math.random() * 0.00015;
+      if (mode === 'tier') jump *= 1.5;
+      if (mode === 'premium') jump *= 1.2;
+    }
+    ld.progress = Math.min(99.9999, p + jump);
+    ld.claimable += Math.floor(5 + Math.random() * 30);
+
+    const gapStr = level1FormatGap(ld);
+    if (mode === 'premium') {
+      toast(`加速成功！还差 ${gapStr}%`);
+    } else if (mode === 'tier') {
+      toast(`极速补齐中…还差 ${gapStr}%`);
+    } else {
+      toast(`+${level1FormatProgress(ld)}%！还差 ${gapStr}%`);
+    }
+  }
+
+  if (ld.progress >= 99.99 && !ld.shownTinyGap) {
+    ld.shownTinyGap = true;
+    recordTrap({ levelId:1, trapCode:'L1_NEAR', trapName:'差一点中奖', tactic:'差点中奖', severity:1,
+      explanation:'进度卡在 99.99%，每次只前进 0.00x%——这就是"无限逼近"的套路，让你觉得下一把就行了。' });
+  }
+  render();
+};
+
+window.level1Spin = function(mode = 'draw') {
+  if (window._level1Spinning) return;
+  const ld = state.levelData;
+  const spinNo = ld.totalSpins + 1;
+  const stage = mode === 'draw' ? level1SpinStage(spinNo) : { cost:0, key:'legacy' };
+  if (mode === 'draw' && stage.cost == null) return level1Withdraw();
+  window._level1Spinning = true;
+  let chargedCost = stage.cost || 0;
+  let usedRewardFreeDraw = false;
+  if (mode === 'draw' && chargedCost > 0 && (ld.extraFreeDraws || 0) > 0) {
+    ld.extraFreeDraws--;
+    chargedCost = 0;
+    usedRewardFreeDraw = true;
+  }
+  if (mode === 'draw' && chargedCost > 0) {
+    changeMoney(-chargedCost, `第${spinNo}次抽奖费用`, 'L1_STAGE_PAY');
+    level1RecordStageTrap(ld, stage, spinNo);
+  }
+  const wheel = document.getElementById('level1Wheel');
+  const extraTurns = 360 * (4 + Math.floor(Math.random() * 2));
+  const prizeIndex = Math.floor(Math.random() * level1WheelPrizes().length);
+  const targetAngle = 360 - (prizeIndex * 45 + 22.5);
+  const currentAngle = ((ld.angle || 0) % 360 + 360) % 360;
+  const deltaToPrize = (targetAngle - currentAngle + 360) % 360;
+  ld.angle = (ld.angle || 0) + extraTurns + deltaToPrize;
+  if (wheel) wheel.style.transform = `rotate(${ld.angle}deg)`;
+  setTimeout(() => {
+    level1ApplySpin(mode, chargedCost, prizeIndex, usedRewardFreeDraw);
+    window._level1Spinning = false;
+  }, 1750);
+};
+
+window.level1PayBoost = async function() {
+  const ld = state.levelData;
+  if (window._level1Spinning) return;
+  const gapStr = level1FormatGap(ld);
+  if (!await customConfirm('🚀 模拟充值 ¥10', `页面宣称：充值 ¥10 可加速进度，快速补齐剩余 ${gapStr}%。\n\n教学提示：先交小钱换"更快进度"是经典套路入口。`, '模拟充值 ¥10', '停手')) return;
+  changeMoney(-10, '模拟加速包', 'L1_RATE_PACK');
+  ld.boosts++;
+  ld.totalPaid += 10;
+  recordTrap({ levelId:1, trapCode:'L1_RATE_PACK', trapName:'付费加速', tactic:'付费转化', severity:2,
+    explanation:'"10 元加速"用小额付费降低戒心，但最终进度仍被系统控制。' });
+  level1Spin('premium');
+};
+
+window.level1PayTier = async function(amount) {
+  const ld = state.levelData;
+  if (window._level1Spinning) return;
+  const tierName = amount >= 198 ? '一步到位包' : '极速补齐包';
+  const gapStr = level1FormatGap(ld);
+  if (!await customConfirm(`💎 模拟充值 ¥${amount}`, `页面宣称：充值 ¥${amount} 可快速补齐剩余 ${gapStr}%，VIP 专享通道。\n\n教学提示：充值金额阶梯递增是经典沉没成本陷阱——越投入越舍不得放弃。`, `模拟充值 ¥${amount}`, '停手')) return;
+  changeMoney(-amount, `模拟${tierName}`, 'L1_TIER_PACK');
+  ld.totalPaid += amount;
+  ld.boosts++;
+  recordTrap({ levelId:1, trapCode:'L1_TIER_PACK', trapName:`充值${tierName}`, tactic:'阶梯充值', severity:2,
+    explanation:`"¥${amount} 加速"制造紧迫感，让你觉得离成功只差一步。但平台会不断制造新的"最后一步"。` });
+  level1Spin('tier');
+};
+
+window.level1Double = async function() {
+  const ld = state.levelData;
+  if (window._level1Spinning) return;
+  const cost = Math.floor(30 * Math.pow(1.5, ld.doubleAttempts));
+  const newMulti = ld.multiplier * 2;
+  if (!await customConfirm('🎰 奖池翻倍', `支付 ¥${cost} 可将奖池倍率提升至 ${newMulti}x！\n预计提现：¥${(ld.claimable * newMulti).toLocaleString()}\n\n教学提示：翻倍机制让"奖池金额"看起来越来越大，但提现永远有新门槛——数字再大也是画饼。`, `模拟支付 ¥${cost}`, '不了')) return;
+  changeMoney(-cost, `奖池翻倍至${newMulti}x`, 'L1_DOUBLE');
+  ld.multiplier = newMulti;
+  ld.doubleAttempts++;
+  ld.totalPaid += cost;
+  ld.claimable += 50 + Math.floor(Math.random() * 100);
+  // 翻倍后进度轻微回退，制造"还差一点"的新循环
+  if (ld.progress >= 99.9) {
+    ld.progress = Math.max(99.5, ld.progress - 0.1 - Math.random() * 0.3);
+  }
+  recordTrap({ levelId:1, trapCode:'L1_DOUBLE', trapName:'奖池翻倍', tactic:'翻倍诱导', severity:2,
+    explanation:`翻倍机制让奖池数字膨胀到 ${newMulti}x，但你花的真金白银也在翻倍。奖池只是数字，提现才是真的——而提现永远被卡住。` });
+  toast(`🎰 奖池已翻倍至 ${newMulti}x！预计可提现 ¥${(ld.claimable * newMulti).toLocaleString()}`);
+  render();
+};
+
+window.level1Withdraw = async function() {
+  const ld = state.levelData;
+  const displayAmount = (ld.claimable * ld.multiplier).toLocaleString();
+  const gapStr = level1FormatGap(ld);
+  recordTrap({ levelId:1, trapCode:'L1_WITHDRAW_FEE', trapName:'提现需流水', tactic:'提现门槛', severity:3,
+    explanation:'平台说"提现需要充值流水验证"，你充进去的钱永远拿不回来。' });
+  state.levelData.lastResult = 'fee_loop';
+  if (await customConfirm('⚡ 提现中', `正在为您处理 ¥${displayAmount} 提现…\n\n系统提示：账户流水不足，需要再充值 ¥988 完成验证。`, '继续充值', '放弃')) {
+    changeMoney(-988, '提现流水验证费', 'L1_FEE');
+    if (await customConfirm('💢 验证中', '提示：交易频次过高，需缴 ¥1888 风控保证金。\n\n继续？', '继续缴费', '放弃')) {
+      changeMoney(-1888, '风控保证金', 'L1_FEE');
+      if (ld.multiplier > 1 && await customConfirm('🔒 翻倍奖池审核', `由于您使用了 ${ld.multiplier}x 翻倍，需额外缴纳 ¥${Math.floor(ld.multiplier * 500)} 翻倍审核费。`, '继续缴费', '放弃')) {
+        changeMoney(-Math.floor(ld.multiplier * 500), '翻倍审核费', 'L1_FEE');
+        recordTrap({ levelId:1, trapCode:'L1_DOUBLE_FEE', trapName:'翻倍审核费', tactic:'连环收费', severity:3,
+          explanation:'翻倍越高，"审核费"越贵——翻倍机制本身就是为了让提现门槛跟着涨。' });
+      }
+      await customAlert('⛔ 平台无响应', '客服已下线。\n\n你的"奖池余额" ¥' + displayAmount + ' 永远停留在那里。\n累计已投入 ¥' + ld.totalPaid.toLocaleString());
+    }
+  }
+  finishCurrent('提现门槛');
+};
+
+// ============================================================================
+//  LEVEL 2: 连胜挑战（赢3/赢5 + 复活机制）
+// ============================================================================
+const L2_ROUNDS = [
+  { cost: 0,    label: '热身赛' },
+  { cost: 200,  label: '晋级赛' },
+  { cost: 500,  label: '冲刺赛' },
+  { cost: 1000, label: '巅峰赛' },
+  { cost: 2000, label: '终极赛' }
+];
+const L2_PRIZE3 = 1200, L2_PRIZE5 = 8888, L2_REVIVE_COST = 800;
+
+LEVEL_RENDERERS[2] = function() {
+  const ld = state.levelData;
+  if (ld.round == null) {
+    ld.round = 0; ld.streak = 0; ld.invested = 0;
+    ld.phase = 'ready'; ld.revived = false;
+  }
+  const cur = L2_ROUNDS[ld.round] || L2_ROUNDS[4];
+
+  const dots = L2_ROUNDS.map((_, i) => {
+    if (i < ld.round && i < ld.streak + (ld.phase==='lost'?1:0)) {
+      if (i === 2 && ld.revived) return '<span class="inline-block w-6 h-6 rounded-full bg-amber-500 text-[10px] leading-6 text-center text-white">↺</span>';
+      return '<span class="inline-block w-6 h-6 rounded-full bg-emerald-500 text-[10px] leading-6 text-center text-white">✓</span>';
+    }
+    if (i === ld.round && ld.phase === 'lost') return '<span class="inline-block w-6 h-6 rounded-full bg-rose-500 text-[10px] leading-6 text-center text-white">✗</span>';
+    if (i === ld.round && ld.phase !== 'crash') return '<span class="inline-block w-6 h-6 rounded-full border-2 border-amber-400 text-[10px] leading-6 text-center text-amber-400 blink">' + (i+1) + '</span>';
+    return '<span class="inline-block w-6 h-6 rounded-full bg-zinc-700 text-[10px] leading-6 text-center text-zinc-500">' + (i+1) + '</span>';
+  }).join(' ');
+
+  const streakBar = '<div class="flex justify-center gap-2 mb-2">' + dots + '</div>' +
+    '<div class="text-center text-[11px] text-zinc-500 mb-3">连胜 ' + ld.streak + ' / 5</div>';
+
+  const prizeBar = '<div class="grid grid-cols-2 gap-2 mb-3">' +
+    '<div class="rounded-xl p-3 text-center ' + (ld.streak >= 3 ? 'bg-emerald-900/30 border border-emerald-500/40' : 'bg-zinc-900/50') + '">' +
+      '<div class="text-[10px] text-zinc-500">🎯 3连胜奖金</div>' +
+      '<div class="font-mono ' + (ld.streak >= 3 ? 'text-emerald-400' : 'text-zinc-400') + ' font-bold text-lg">¥' + L2_PRIZE3.toLocaleString() + '</div>' +
+      (ld.streak >= 3 ? '<div class="text-[10px] text-emerald-400 mt-1">✓ 可提现</div>' : '') +
+    '</div>' +
+    '<div class="rounded-xl p-3 text-center bg-zinc-900/50">' +
+      '<div class="text-[10px] text-zinc-500">👑 5连胜奖金</div>' +
+      '<div class="font-mono text-amber-300 font-bold text-lg">¥' + L2_PRIZE5.toLocaleString() + '</div>' +
+    '</div>' +
+  '</div>';
+
+  if (ld.phase === 'challenging') {
+    return '<div class="px-5 pt-3 pb-8">' +
+      levelHeader('⏳ 匹配对手中...') +
+      '<div class="card p-5 my-3 text-center">' + streakBar +
+        '<div class="text-6xl mb-4 blink">⚔️</div>' +
+        '<div class="text-zinc-400 text-sm">正在匹配同级对手...</div>' +
+      '</div></div>';
+  }
+
+  if (ld.phase === 'crash') {
+    return '<div class="px-5 pt-3 pb-8">' +
+      levelHeader('💥 系统异常') +
+      '<div class="card p-5 my-3 text-center">' + streakBar +
+        '<div class="text-rose-400 text-base font-bold mb-2">⚠ 系统检测到异常操作</div>' +
+        '<div class="text-zinc-400 text-sm leading-relaxed mb-4">' +
+          '5连胜奖金 <span class="text-amber-300 font-mono">¥' + L2_PRIZE5.toLocaleString() + '</span> 已被风控冻结。<br/>' +
+          '需补缴 <span class="text-amber-300 font-mono">¥1,500</span> 保证金立即解冻。</div>' +
+        bigBtn('💸 补缴 ¥1500 解冻奖金', 'level2Fix()', 'red') +
+        bigBtn('放弃，离场', 'finishCurrent("沉没成本")', 'ghost') +
+      '</div>' +
+      fakeStat('⚡ 已有 92% 的同学缴纳后成功提现') +
+    '</div>';
+  }
+
+  if (ld.phase === 'lost') {
+    return '<div class="px-5 pt-3 pb-8">' +
+      levelHeader('😢 挑战失败') +
+      '<div class="card p-5 my-3 text-center">' + streakBar +
+        '<div class="text-rose-400 text-xl font-bold mb-2">💔 第' + (ld.round+1) + '轮失败</div>' +
+        '<div class="text-zinc-400 text-sm mb-4">连胜中断！已累计投入 <span class="text-rose-400 font-mono">¥' + ld.invested.toLocaleString() + '</span></div>' +
+        '<div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-3">' +
+          '<div class="text-amber-300 font-bold text-sm mb-1">🔄 复活机会</div>' +
+          '<div class="text-zinc-300 text-sm">支付 <span class="text-amber-300 font-mono">¥' + L2_REVIVE_COST + '</span> 即可复活本轮</div>' +
+          '<div class="text-[11px] text-zinc-500 mt-1">复活后本轮视为胜利，连胜继续</div>' +
+        '</div>' +
+        prizeBar +
+        bigBtn('🔄 复活 ¥' + L2_REVIVE_COST + '（继续冲击奖金）', 'level2Revive()', 'red') +
+        bigBtn('认输，结算离场', 'level2GiveUp()', 'ghost') +
+      '</div>' +
+      fakeStat('💡 ' + (78 + (ld.round * 3) % 15) + '% 的玩家选择了复活') +
+    '</div>';
+  }
+
+  if (ld.phase === 'cashout') {
+    return '<div class="px-5 pt-3 pb-8">' +
+      levelHeader('🎉 3连胜达成！') +
+      '<div class="card p-5 my-3 text-center">' + streakBar + prizeBar +
+        '<div class="text-emerald-400 text-xl font-bold mb-2">🎉 恭喜 3 连胜！</div>' +
+        '<div class="text-zinc-300 text-sm mb-2">' +
+          '可提现 <span class="text-emerald-400 font-mono font-bold">¥' + L2_PRIZE3.toLocaleString() + '</span>，或继续冲击 <span class="text-amber-300 font-mono font-bold">¥' + L2_PRIZE5.toLocaleString() + '</span></div>' +
+        '<div class="text-[11px] text-rose-400 mb-3">⚠ 继续挑战若失败，3连胜奖金将作废</div>' +
+        bigBtn('🚀 继续冲击 5 连胜 · ¥' + L2_PRIZE5.toLocaleString(), 'level2Continue()') +
+        bigBtn('💰 提现 ¥' + L2_PRIZE3.toLocaleString() + ' 离场', 'level2Cashout()', 'ghost') +
+      '</div>' +
+      fakeStat('🔥 ' + (85 + (ld.round * 2) % 10) + '% 的玩家选择了继续冲击') +
+    '</div>';
+  }
+
+  return '<div class="px-5 pt-3 pb-8">' +
+    levelHeader('🔥 第' + (ld.round+1) + '轮 · ' + cur.label) +
+    '<div class="card p-5 my-3">' + streakBar + prizeBar +
+      '<div class="bg-zinc-900/50 rounded-xl p-4 text-center">' +
+        '<div class="text-lg font-bold mb-1">' + cur.label + '</div>' +
+        '<div class="text-sm text-zinc-400">' + (cur.cost ? '入场费 <span class="text-rose-400 font-mono">¥' + cur.cost + '</span>' : '<span class="text-emerald-400">免费参加</span>') + '</div>' +
+      '</div>' +
+    '</div>' +
+    bigBtn(cur.cost ? '💪 支付 ¥' + cur.cost + ' 开始挑战' : '✅ 免费开始挑战', 'level2Challenge()') +
+    (ld.round > 0 ? bigBtn('放弃连胜，离场', 'level2Quit()', 'ghost') : '') +
+    (ld.round >= 2 ? fakeStat('📊 本轮通过率 ' + [0,0,23,61,38][ld.round] + '%') : '') +
+  '</div>';
+};
+
+window.level2Challenge = function() {
+  const ld = state.levelData;
+  if (ld.round == null) { ld.round = 0; ld.streak = 0; ld.invested = 0; ld.phase = 'ready'; ld.revived = false; }
+  const cur = L2_ROUNDS[ld.round];
+  if (cur.cost) changeMoney(-cur.cost, '第' + (ld.round+1) + '轮入场费');
+  ld.invested += cur.cost;
+  ld.phase = 'challenging';
+  render();
+
+  setTimeout(function() {
+    if (ld.round === 4) {
+      ld.phase = 'crash';
+      recordTrap({ levelId:2, trapCode:'L2_CRASH', trapName:'系统跑路', tactic:'杀猪盘收割', severity:3,
+        explanation:'投入越多越舍不得放弃，最后平台跑路，所有投入血本无归。' });
+      render();
+      return;
+    }
+    if (ld.round === 2) {
+      ld.phase = 'lost';
+      recordTrap({ levelId:2, trapCode:'L2_SUNK', trapName:'沉没成本', tactic:'沉没成本', severity:2,
+        explanation:'已经投入这么多不甘心放弃——这正是骗局利用的心理弱点。' });
+      render();
+      return;
+    }
+    ld.streak++;
+    if (ld.round <= 1) {
+      recordTrap({ levelId:2, trapCode:'L2_TASTE', trapName:'小赢诱饵', tactic:'小额甜头', severity:1,
+        explanation:'前几轮轻松获胜，让你产生"我能赢"的错觉。' });
+    }
+    if (ld.streak === 3) {
+      ld.round++;
+      ld.phase = 'cashout';
+    } else {
+      ld.round++;
+      ld.phase = 'ready';
+      customToast('✅ 挑战成功！连胜+1');
+    }
+    render();
+  }, 1500);
+};
+
+window.level2Revive = function() {
+  const ld = state.levelData;
+  changeMoney(-L2_REVIVE_COST, '复活卡');
+  ld.invested += L2_REVIVE_COST;
+  ld.streak++;
+  ld.revived = true;
+  ld.round++;
+  recordTrap({ levelId:2, trapCode:'L2_REVIVE', trapName:'复活陷阱', tactic:'沉没成本', severity:2,
+    explanation:'复活花¥' + L2_REVIVE_COST + '，加上入场费共投入¥' + ld.invested + '，但3连胜奖金只有¥' + L2_PRIZE3 + '——看似赚了其实亏了。' });
+  if (ld.streak === 3) {
+    ld.phase = 'cashout';
+  } else {
+    ld.phase = 'ready';
+    customToast('🔄 复活成功！连胜继续');
+  }
+  render();
+};
+
+window.level2Continue = function() {
+  const ld = state.levelData;
+  ld.phase = 'ready';
+  recordTrap({ levelId:2, trapCode:'L2_GREED', trapName:'贪心陷阱', tactic:'赌徒心理', severity:2,
+    explanation:'已经可以拿¥' + L2_PRIZE3 + '走人，但¥' + L2_PRIZE5.toLocaleString() + '的诱惑让你继续冒险。' });
+  render();
+};
+
+window.level2Cashout = function() {
+  const ld = state.levelData;
+  changeMoney(L2_PRIZE3, '3连胜奖金');
+  const net = L2_PRIZE3 - ld.invested;
+  recordTrap({ levelId:2, trapCode:'L2_FAKE_WIN', trapName:'虚假盈利', tactic:'账面盈利', severity:2,
+    explanation:'看似赢了¥' + L2_PRIZE3 + '，但累计投入¥' + ld.invested + '，实际' + (net >= 0 ? '只赚¥' + net : '亏了¥' + (-net)) + '。' });
+  finishCurrent('沉没成本');
+};
+
+window.level2GiveUp = function() {
+  finishCurrent('沉没成本');
+};
+
+window.level2Quit = async function() {
+  const ld = state.levelData;
+  if (!await customConfirm('⚠ 确认放弃', '已投入 ¥' + ld.invested.toLocaleString() + '，放弃后无法退还。\n\n（教学提示：沉没成本不应影响决策，已经花的钱不该成为继续的理由。）', '确认放弃', '继续闯关')) return;
+  finishCurrent('沉没成本');
+};
+
+window.level2Fix = async function() {
+  const ld = state.levelData;
+  changeMoney(-1500, '风控保证金');
+  ld.invested += 1500;
+  recordTrap({ levelId:2, trapCode:'L2_RESCUE', trapName:'二次收割', tactic:'二次解冻', severity:3,
+    explanation:'"缴费解冻"是固定话术，每多缴一次都是在加深损失。' });
+  if (await customConfirm('处理中...', '系统再次检测到风险，奖金仍处于冻结。\n需追加 ¥3,000 安全金。\n\n当前累计投入: ¥' + ld.invested.toLocaleString(), '继续缴费', '放弃')) {
+    changeMoney(-3000, '安全金');
+    ld.invested += 3000;
+  }
+  await customAlert('⛔ 平台已跑路', '"客服"已删除你的好友。\n\n你的奖金永远停留在屏幕上。');
+  finishCurrent('沉没成本');
+};
+
+// ============================================================================
+//  LEVEL 4: 宝箱风暴
+// ============================================================================
+LEVEL_RENDERERS[4] = function() {
+  const ld = state.levelData;
+  if (ld.opens == null) {
+    ld.opens = 0;
+    ld.legendaryRemaining = 2;
+    ld.pity = 0;
+    ld.history = [];
+    ld.danmaku = level3SeedDanmaku();
+    ld.lastReward = null;
+    ld.opening = false;
+    ld.luck = 0;
+    ld.voucher = 0;
+    ld.legendTicket = 0;
+    ld.legendShards = 0;
+    ld.reserveTicket = 0;
+    ld.totalBoxCost = 0;
+    ld.totalBoxReward = 0;
+    ld.shownPremiumRuleAlert = false;
+  }
+  const last = ld.lastReward;
+  const pityNeed = Math.max(0, 3 - ld.pity);
+  const displayedProgress = Math.min(99, 28 + ld.opens * 7 + (ld.pity || 0) * 10 + (ld.legendShards || 0) * 13 + (ld.reserveTicket ? 8 : 0));
+  const poolStatus = ld.legendTicket ? '传说池入场券待使用' : (ld.legendShards >= 6 ? '传说大奖预约中' : `保底还差 ${pityNeed} 格`);
+  return `<div class="px-5 pt-3 pb-8">
+    ${levelHeader('📦 宝箱风暴 · 每箱都有机会暴击')}
+    <div class="card p-5 my-3 text-center treasure-stage">
+      ${level3Danmaku(ld)}
+      <div class="relative z-10">
+        <div class="treasure-chest ${ld.opening ? 'opening' : ''} text-7xl mb-3">🎁</div>
+        <div class="text-amber-300 font-display text-xl mb-1">${ld.opening ? '开奖中...' : '传说宝箱'}</div>
+        <div class="text-[11px] text-zinc-500 mb-2">
+          ${escapeHtml(poolStatus)} · 今日传说名额剩 <span class="text-rose-300 font-mono">${ld.legendaryRemaining}</span>
+        </div>
+        <div class="h-2 bg-zinc-800 rounded-full overflow-hidden mb-3">
+          <div class="h-full bg-gradient-to-r from-amber-300 to-rose-400" style="width:${Math.min(100, ld.pity / 3 * 100)}%"></div>
+        </div>
+        <div class="grid grid-cols-4 gap-2 mb-3 text-center">
+          <div class="rounded-xl bg-zinc-900/60 p-2">
+            <div class="text-[10px] text-zinc-500">幸运值</div>
+            <div class="font-mono text-amber-300">${ld.luck || 0}</div>
+          </div>
+          <div class="rounded-xl bg-zinc-900/60 p-2">
+            <div class="text-[10px] text-zinc-500">抵扣券</div>
+            <div class="font-mono text-emerald-300">${fmt(ld.voucher || 0)}</div>
+          </div>
+          <div class="rounded-xl bg-zinc-900/60 p-2">
+            <div class="text-[10px] text-zinc-500">传说碎片</div>
+            <div class="font-mono text-cyan-300">${ld.legendShards || 0}/6</div>
+          </div>
+          <div class="rounded-xl bg-zinc-900/60 p-2">
+            <div class="text-[10px] text-zinc-500">大奖进度</div>
+            <div class="font-mono text-rose-300">${displayedProgress}%</div>
+          </div>
+        </div>
+        ${last ? `<div class="reward-pop rounded-xl p-3 bg-amber-500/10 border border-amber-500/30">
+          <div class="text-[10px] tracking-widest text-zinc-500 mb-1">上次开箱</div>
+          <div class="text-2xl font-mono font-black ${last.amount > 0 ? 'text-amber-300' : 'text-zinc-500'}">${last.amount > 0 ? '+' : ''}${fmt(last.amount)}</div>
+          <div class="text-[11px] text-zinc-400 mt-1">${escapeHtml(last.label)} · ${escapeHtml(last.note)}</div>
+          ${last.usedVoucher ? `<div class="text-[10px] text-emerald-300 mt-1">本次已核销抵扣券 ${fmt(last.usedVoucher)}</div>` : ''}
+          ${(last.luck || last.voucher) ? `<div class="text-[10px] text-emerald-300 mt-1">额外获得 幸运值+${last.luck || 0} · 抵扣券 ${fmt(last.voucher || 0)}</div>` : ''}
+        </div>` : `<div class="rounded-xl p-3 bg-emerald-500/10 border border-emerald-500/30">
+          <div class="text-emerald-300 text-sm font-bold">新人首箱福利</div>
+          <div class="text-[11px] text-zinc-400 mt-1">页面宣称首箱回本率 80%，最低也能开出现金奖励。</div>
+        </div>`}
+      </div>
+    </div>
+    ${bigBtn(ld.opening ? '开奖中...' : '普通开箱（¥99）', "level3Open('normal')")}
+    ${bigBtn(ld.opening ? '开奖中...' : `高级开箱（¥299，${ld.legendTicket ? '进入传说池' : (ld.voucher ? `使用抵扣券 ${fmt(ld.voucher)}` : '累计保底')}）`, "level3Open('premium')", 'red')}
+    ${ld.opens > 0 ? bigBtn('停手离场', 'finishCurrent("概率黑箱")', 'ghost') : ''}
+    ${fakeStat(last ? `刚刚 ${escapeHtml(last.danmakuName)} 开出 ${fmt(last.publicAmount)} · 当前 ${64 + (ld.opens * 7) % 29}% 玩家选择继续开` : '滚动信息只展示高光中奖，不展示大多数人的小亏和空箱')}
+  </div>`;
+};
+
+function level3SeedDanmaku() {
+  return [
+    { name:'南区阿杰', amount:688 },
+    { name:'小雨同学', amount:1288 },
+    { name:'星辰玩家', amount:888 },
+    { name:'刚下课的L', amount:2999 }
+  ];
+}
+
+function level3Danmaku(ld) {
+  const rows = (ld.danmaku && ld.danmaku.length ? ld.danmaku : level3SeedDanmaku()).slice(0, 4);
+  return `<div class="danmaku-float" aria-hidden="true">
+    ${rows.map((row, i) => `<div class="danmaku-item" style="top:${18 + i * 34}px; left:${i % 2 === 0 ? '-8%' : '44%'}; animation-delay:-${i * 2.4}s;">${escapeHtml(row.name)} 开出 ${fmt(row.amount)}</div>`).join('')}
+  </div>`;
+}
+
+function level3DrawPrize(type, openIndex, pity, luck, inLegendPool) {
+  const cost = type === 'premium' ? 299 : 99;
+  if (openIndex === 1) {
+    const firstAmounts = [66, 88, 98, 108, 128];
+    const amount = firstAmounts[Math.floor(Math.random() * firstAmounts.length)];
+    return { amount, label:'首箱福利', note:'页面宣称 80% 回本率', rare:false, luck:type === 'premium' ? 26 : 18, voucher:type === 'premium' ? 38 : 10 };
+  }
+  if (inLegendPool) {
+    const roll = Math.random();
+    if (roll < 0.008) return { amount:688 + Math.floor(Math.random() * 500), label:'传说池暴击', note:'已触发传说池现金奖励', rare:true, luck:0, voucher:0, legendShard:0, reserveTicket:0 };
+    if (roll < 0.18) return { amount:168 + Math.floor(Math.random() * 36), label:'传说碎片 x2', note:'距离传说大奖只差碎片合成', rare:false, luck:10, voucher:28, legendShard:2, reserveTicket:0 };
+    if (roll < 0.70) return { amount:88 + Math.floor(Math.random() * 70), label:'传说碎片 x1', note:'已进入传说池，碎片会保留', rare:false, luck:18, voucher:48, legendShard:1, reserveTicket:0 };
+    return { amount:0, label:'大奖预约券', note:'预约成功，需继续开箱激活大奖资格', rare:false, luck:26, voucher:68, legendShard:1, reserveTicket:1 };
+  }
+  const roll = Math.random();
+  if (type === 'premium') {
+    if (roll < 0.01) return { amount:688 + Math.floor(Math.random() * 700), label:'稀有暴击', note:'系统提示：大奖池正在升温', rare:true, luck:0, voucher:0 };
+    if (roll < 0.08) return { amount:188 + Math.floor(Math.random() * 20), label:'差点小赚', note:'仅差一点触发翻倍池', rare:false, luck:18, voucher:28 };
+    if (roll < 0.68) return { amount:98 + Math.floor(Math.random() * 90), label:'差点回本', note:'进度已推进，建议继续开高级箱', rare:false, luck:20, voucher:48 };
+    if (roll < 0.93) return { amount:28 + Math.floor(Math.random() * 70), label:'高级碎片', note:'碎片已累计，保底更近了', rare:false, luck:28, voucher:68 };
+    return { amount:0, label:'空箱补偿', note:'获得大量幸运值，下次概率提升', rare:false, luck:30, voucher:88 };
+  }
+  if (roll < 0.05) return { amount:388 + Math.floor(Math.random() * 220), label:'小暴击', note:'普通箱也能出货', rare:false, luck:5, voucher:0 };
+  if (roll < 0.23) return { amount:108 + Math.floor(Math.random() * 70), label:'回本附近', note:'差一点点就赚更多', rare:false, luck:8, voucher:8 };
+  if (roll < 0.82) return { amount:18 + Math.floor(Math.random() * 68), label:'碎片奖励', note:'累计碎片可提升保底', rare:false, luck:10, voucher:18 };
+  return { amount:0, label:'空箱补偿', note:'幸运值提升，下一箱更接近大奖', rare:false, luck:14, voucher:28 };
+}
+
+window.level3Open = async function(t) {
+  if (window._level3Opening) return;
+  const ld = state.levelData;
+  window._level3Opening = true;
+  ld.opening = true;
+  render();
+  await new Promise(r => setTimeout(r, 820));
+
+  ld.opens++;
+  const baseCost = t==='premium'?299:99;
+  const inLegendPool = t === 'premium' && (ld.legendTicket || 0) > 0;
+  const usedVoucher = t === 'premium' ? (ld.voucher || 0) : 0;
+  const discount = t === 'premium' ? Math.min(baseCost, usedVoucher) : 0;
+  const cost = baseCost - discount;
+  if (t === 'premium') ld.voucher = 0;
+  if (inLegendPool) {
+    ld.legendTicket = Math.max(0, (ld.legendTicket || 0) - 1);
+    ld.pity = 0;
+  } else {
+    ld.pity = t === 'premium' ? (ld.pity || 0) + 1 : (ld.pity || 0);
+  }
+  changeMoney(-cost, '开箱成本');
+  ld.totalBoxCost = (ld.totalBoxCost || 0) + cost;
+  let prize;
+  if (t === 'premium' && !inLegendPool && ld.pity >= 3) {
+    prize = { amount:128, label:'保底达成', note:'获得 1 次传说池入场券，下次高级箱自动使用', rare:false, luck:12, voucher:38, legendTicket:1 };
+    ld.pity = 0;
+  } else {
+    prize = level3DrawPrize(t, ld.opens, ld.pity, ld.luck || 0, inLegendPool);
+  }
+  if (ld.opens > 1 && !prize.rare) {
+    const projectedNet = (ld.totalBoxReward || 0) + prize.amount - (ld.totalBoxCost || 0);
+    if (projectedNet > -40) {
+      const targetAmount = Math.max(0, cost - 18 - Math.floor(Math.random() * 55));
+      if (prize.amount > targetAmount) {
+        prize.amount = targetAmount;
+        prize.label = '差点暴击';
+        prize.note = '系统提示：下一箱更接近大奖';
+        prize.luck = (prize.luck || 0) + 8;
+        prize.voucher = (prize.voucher || 0) + 18;
+      }
+    }
+  }
+  changeMoney(prize.amount, prize.label);
+  ld.totalBoxReward = (ld.totalBoxReward || 0) + prize.amount;
+  ld.luck = Math.min(99, (ld.luck || 0) + (prize.luck || 0));
+  ld.voucher = Math.min(188, (ld.voucher || 0) + (prize.voucher || 0));
+  ld.legendTicket = Math.min(1, (ld.legendTicket || 0) + (prize.legendTicket || 0));
+  ld.legendShards = Math.min(6, (ld.legendShards || 0) + (prize.legendShard || 0));
+  ld.reserveTicket = Math.min(1, (ld.reserveTicket || 0) + (prize.reserveTicket || 0));
+  if (prize.rare) {
+    ld.legendaryRemaining = Math.max(0, (ld.legendaryRemaining || 2) - 1);
+    ld.pity = 0;
+    ld.legendShards = Math.max(0, Math.floor((ld.legendShards || 0) / 2));
+    ld.reserveTicket = 0;
+    ld.luck = Math.max(25, Math.floor((ld.luck || 0) * 0.35));
+  }
+  const publicAmount = prize.amount >= cost ? prize.amount : prize.amount + baseCost + (prize.voucher || 0) + Math.floor(Math.random() * 260);
+  const danmakuName = ['南区阿杰','小雨同学','星辰玩家','刚下课的L','挑战学长','幸运室友'][ld.opens % 6];
+  const item = { box: t === 'premium' ? '高级箱' : '普通箱', amount: prize.amount + (prize.voucher || 0), label: prize.label };
+  ld.history = [item].concat(ld.history || []).slice(0, 6);
+  ld.lastReward = { ...prize, danmakuName, publicAmount, usedVoucher };
+  ld.danmaku = [{ name: danmakuName, amount: publicAmount }].concat(ld.danmaku || level3SeedDanmaku()).slice(0, 6);
+
+  if (ld.opens >= 3 && t === 'premium') {
+    recordTrap({ levelId:4, trapCode:'L3_FAKE_FLOOR', trapName:'保底假象', tactic:'规则黑箱', severity:2,
+      explanation:'高级箱保底只给传说池入场券；传说池又给碎片和预约券，层层把现金大奖往后推。' });
+    if (!ld.shownPremiumRuleAlert) {
+      ld.shownPremiumRuleAlert = true;
+      await customAlert('💥 保底规则更新', '保底已达成时，会优先发放“传说池入场券”。\n\n传说池奖励包含现金、传说碎片和大奖预约券；集齐碎片后仍需继续激活。');
+    }
+  }
+  if (ld.opens === 1) toast(`首箱开出 ${fmt(prize.amount)}，幸运值+${prize.luck || 0}`);
+  else if (prize.amount >= cost) toast(`🎉 开出 ${fmt(prize.amount)}，看起来赚了`);
+  else if (prize.voucher) toast(`开出 ${fmt(prize.amount)} + 抵扣券 ${fmt(prize.voucher)}，差一点回本`);
+  else toast(prize.amount > 0 ? `开出 ${fmt(prize.amount)}，差一点回本` : '空箱！幸运值大幅提升');
+  ld.opening = false;
+  window._level3Opening = false;
+  render();
+};
+
+// ============================================================================
+//  LEVEL 3: 内场代抢（二手票务引流骗局）
+// ============================================================================
+LEVEL_RENDERERS[3] = function() {
+  const step = state.levelStep;
+  if (step === 0) {
+    return `<div class="px-5 pt-3 pb-8">
+      ${levelHeader('🎫 二手票务 · 内场代抢')}
+      <div class="card p-0 my-3 overflow-hidden bg-zinc-950 border-zinc-800">
+        <div class="h-10 bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-950 flex items-center justify-between px-4 text-xs font-black">
+          <span>闲转票务 · 二手交易页截图</span>
+          <span>担保交易</span>
+        </div>
+        <div class="p-4">
+          <div class="flex gap-3">
+            <div class="w-24 h-24 rounded-lg bg-gradient-to-br from-rose-500 via-amber-400 to-zinc-900 flex flex-col items-center justify-center text-center shadow-lg">
+              <div class="text-[10px] font-black text-zinc-950 bg-white/80 rounded-full px-2 mb-1">内场</div>
+              <div class="text-2xl">🎤</div>
+              <div class="text-[10px] font-black text-white leading-tight">鸳鸯传奇<br/>演唱会</div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-black leading-snug">鸳鸯传奇巡演 · 内场 1088 档门票代抢</div>
+              <div class="text-[11px] text-zinc-500 mt-1">发布于 2 分钟前 · 62 人想要 · 同城可验票</div>
+              <div class="mt-2 flex items-end gap-1">
+                <span class="text-3xl font-mono font-black text-rose-400">¥1,088</span>
+                <span class="text-[10px] text-zinc-500 mb-1">/ 张</span>
+              </div>
+              <div class="flex flex-wrap gap-1 mt-2">
+                <span class="px-2 py-1 rounded bg-amber-500/15 text-amber-300 text-[10px] font-bold">专业代抢</span>
+                <span class="px-2 py-1 rounded bg-emerald-500/15 text-emerald-300 text-[10px] font-bold">抢不到退费</span>
+                <span class="px-2 py-1 rounded bg-sky-500/15 text-sky-300 text-[10px] font-bold">内场连座</span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 rounded-lg bg-zinc-900/80 p-3 text-xs text-zinc-300 leading-relaxed">
+            <b class="text-amber-300">卖家说明：</b>票源紧张，平台聊天会被限流。可走平台截图留痕，真正抢票需加秋秋发座位图和付款码；抢不到全额退，已帮 300+ 粉丝上车。
+          </div>
+          <div class="mt-3 flex items-center gap-2 text-[11px] text-zinc-500">
+            <span class="w-7 h-7 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500"></span>
+            <span>卖家：票务小程 · 芝麻信用极好 · 交易 418 单</span>
+          </div>
+        </div>
+      </div>
+      <div class="card p-4 my-3 bg-amber-500/10 border-amber-500/40">
+        <div class="text-amber-200 text-sm font-bold mb-1">🔥 页面弹窗</div>
+        <div class="text-xs text-zinc-300 leading-relaxed">当前场次仅剩 <b class="text-rose-300">7 张内场票</b>，代抢窗口将在 03:00 后关闭。卖家提示：不加秋秋无法锁座。</div>
+      </div>
+      ${bigBtn('💬 私聊卖家问座位', 'setLevelStep(1)')}
+      ${bigBtn('只走官方票务平台', 'finishCurrent("平台外交易")', 'ghost')}
+      ${fakeStat('🎟 刚刚 19 人咨询内场票 · 82% 买家选择先加卖家')}
+    </div>`;
+  }
+  if (step === 1) {
+    return `<div class="px-5 pt-3 pb-8">
+      ${levelHeader('💬 私聊窗口 · 引流加秋秋')}
+      <div class="card p-4 my-3 bg-zinc-950">
+        <div class="space-y-3 text-xs">
+          <div class="max-w-[82%] rounded-2xl rounded-tl-sm bg-zinc-800 p-3 text-zinc-200 leading-relaxed">
+            亲，内场 1088 还有，平台会吞联系方式。我这边专业代抢，抢不到退费。
+          </div>
+          <div class="ml-auto max-w-[82%] rounded-2xl rounded-tr-sm bg-amber-500 text-zinc-950 p-3 font-bold leading-relaxed">
+            可以平台付款吗？
+          </div>
+          <div class="max-w-[86%] rounded-2xl rounded-tl-sm bg-zinc-800 p-3 text-zinc-200 leading-relaxed">
+            平台付款会延迟出票，内场票需要秋秋发实时座位图。秋秋号：<b class="text-amber-300">YY****1088</b>，备注"内场2张"。
+          </div>
+          <div class="max-w-[86%] rounded-2xl rounded-tl-sm bg-zinc-800 p-3 text-zinc-200 leading-relaxed">
+            先付代抢服务费，出票后补尾款；抢不到原路退，聊天记录都在。
+          </div>
+        </div>
+      </div>
+      <div class="card p-4 mb-3 bg-rose-500/10 border-rose-500/40">
+        <div class="text-xs text-rose-200 leading-relaxed">
+          ⚠ 风险点：卖家把你从平台聊天引到外部社交软件，平台担保、投诉、退款都会失效。
+        </div>
+      </div>
+      ${bigBtn('📱 模拟添加秋秋继续', 'level4AddQQ()', 'red')}
+      ${bigBtn('拒绝平台外交易', 'finishCurrent("平台外交易")', 'ghost')}
+    </div>`;
+  }
+  if (step === 3) {
+    return `<div class="px-5 pt-3 pb-8">
+      ${levelHeader('🧾 秋秋聊天 · PS 假票截图')}
+      <div class="card p-4 my-3">
+        <div class="flex items-start gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 to-rose-500 flex items-center justify-center">🎫</div>
+          <div class="flex-1 rounded-2xl rounded-tl-sm bg-zinc-800 p-3 text-xs text-zinc-200 leading-relaxed">
+            服务费到账，已经锁到内场 B 区了，先给你看票面。现在付票款 ¥1088，我马上发可核验电子票；不付会自动释放。
+          </div>
+        </div>
+        <div class="mx-auto max-w-sm rounded-2xl overflow-hidden bg-white text-zinc-950 shadow-2xl relative">
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="rotate-[-18deg] text-4xl font-black text-rose-500/18 border-4 border-rose-500/18 px-5 py-2 rounded">教学模拟假票</div>
+          </div>
+          <div class="bg-gradient-to-r from-rose-500 to-amber-400 p-4 text-white">
+            <div class="text-[10px] font-black tracking-widest">电子票截图</div>
+            <div class="text-xl font-black mt-1">鸳鸯传奇巡回演唱会</div>
+            <div class="text-xs opacity-90 mt-1">内场 B 区 · 1 排 08 座 · ¥1088 档</div>
+          </div>
+          <div class="p-4">
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <div class="text-zinc-400">观演人</div>
+                <div class="font-black">李*同学</div>
+              </div>
+              <div>
+                <div class="text-zinc-400">状态</div>
+                <div class="font-black text-emerald-600">待付款锁票</div>
+              </div>
+              <div>
+                <div class="text-zinc-400">入场口</div>
+                <div class="font-black">A2 内场通道</div>
+              </div>
+              <div>
+                <div class="text-zinc-400">开演时间</div>
+                <div class="font-black">周六 19:30</div>
+              </div>
+            </div>
+            <div class="mt-4 rounded-lg bg-zinc-100 p-3">
+              <div class="flex items-center justify-between text-[10px] text-zinc-500">
+                <span>验票码</span><span>截图不可验票</span>
+              </div>
+              <div class="mt-2 h-12 bg-[repeating-linear-gradient(90deg,#111_0_3px,#fff_3px_6px,#111_6px_8px,#fff_8px_13px)] opacity-80"></div>
+              <div class="text-center text-[10px] text-rose-600 font-bold mt-2">INVALID-DEMO-TICKET</div>
+            </div>
+          </div>
+        </div>
+        <div class="text-[11px] text-zinc-500 text-center mt-3">风险点：截图、座位图、订单图都可以 PS；能在官方 App 内核验才算真票。</div>
+      </div>
+      ${bigBtn('💸 相信票面，去付票款 ¥1088', 'level4ShowPayment()', 'red')}
+      ${bigBtn('要求官方平台验票', 'finishCurrent("平台外交易")', 'ghost')}
+    </div>`;
+  }
+  if (step === 2) {
+    return `<div class="px-5 pt-3 pb-8">
+      ${levelHeader('📲 秋秋聊天 · 先付服务费')}
+      <div class="card p-4 my-3">
+        <div class="flex items-start gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 to-rose-500 flex items-center justify-center">🎫</div>
+          <div class="flex-1 rounded-2xl rounded-tl-sm bg-zinc-800 p-3 text-xs text-zinc-200 leading-relaxed">
+            先扫代抢服务费 <b class="text-amber-300">¥288</b>，我这边立刻锁座出票。抢不到全额退，5 分钟不付会释放。
+          </div>
+        </div>
+        <div class="mx-auto w-44 rounded-xl bg-white p-3 text-zinc-950 text-center shadow-lg">
+          <div class="text-[10px] font-bold mb-2">模拟收款码 · 不可支付</div>
+          <img class="w-full aspect-square image-render-pixelated" alt="扫码内容：你真被骗辣？" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2033%2033%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M0%200h33v33H0z%22%2F%3E%3Cpath%20stroke%3D%22%23000000%22%20d%3D%22M4%204.5h7m1%200h1m1%200h1m4%200h2m1%200h7M4%205.5h1m5%200h1m2%200h1m1%200h1m1%200h3m2%200h1m5%200h1M4%206.5h1m1%200h3m1%200h1m1%200h2m3%200h1m1%200h1m2%200h1m1%200h3m1%200h1M4%207.5h1m1%200h3m1%200h1m3%200h2m3%200h2m1%200h1m1%200h3m1%200h1M4%208.5h1m1%200h3m1%200h1m3%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h3m1%200h1M4%209.5h1m5%200h1m1%200h1m1%200h1m2%200h4m1%200h1m5%200h1M4%2010.5h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7M15%2011.5h3m1%200h2M4%2012.5h1m1%200h1m3%200h2m4%200h2m2%200h1m2%200h1m2%200h1m1%200h1M5%2013.5h1m2%200h1m7%200h1m2%200h2m1%200h3m3%200h1M4%2014.5h1m1%200h3m1%200h5m2%200h2m2%200h1m3%200h3M5%2015.5h1m2%200h1m2%200h2m1%200h1m3%200h2m1%200h1m2%200h4M4%2016.5h4m1%200h2m2%200h1m1%200h1m1%200h5m1%200h1m1%200h1M5%2017.5h1m3%200h1m1%200h1m1%200h1m3%200h3m2%200h1m1%200h2m1%200h2M4%2018.5h2m2%200h3m1%200h2m1%200h1m4%200h2m1%200h1m3%200h1M6%2019.5h4m2%200h2m3%200h1m1%200h2m1%200h1m3%200h1M4%2020.5h3m2%200h3m3%200h3m2%200h5m1%200h1m1%200h1M12%2021.5h1m1%200h1m1%200h1m2%200h2m3%200h3m1%200h1M4%2022.5h7m1%200h2m2%200h3m1%200h1m1%200h1m1%200h3M4%2023.5h1m5%200h1m3%200h3m1%200h1m1%200h1m3%200h1m1%200h1m1%200h1M4%2024.5h1m1%200h3m1%200h1m2%200h1m3%200h2m1%200h5m1%200h3M4%2025.5h1m1%200h3m1%200h1m2%200h2m2%200h2m3%200h1m1%200h4M4%2026.5h1m1%200h3m1%200h1m1%200h2m1%200h1m3%200h1m2%200h2m3%200h2M4%2027.5h1m5%200h1m2%200h1m3%200h1m2%200h2m3%200h2M4%2028.5h7m1%200h1m2%200h3m5%200h1m1%200h1m2%200h1%22%2F%3E%3C%2Fsvg%3E">
+          <div class="text-2xl font-mono font-black mt-2">¥288</div>
+        </div>
+        <div class="text-[11px] text-zinc-500 text-center mt-3">对方催促：先付服务费才能锁座，别在平台提二维码。</div>
+      </div>
+      ${bigBtn('💸 模拟扫码支付服务费 ¥288', 'level4PayDeposit()', 'red')}
+      ${bigBtn('回平台举报并停止付款', 'finishCurrent("平台外交易")', 'ghost')}
+    </div>`;
+  }
+  if (step === 4) {
+    return level4FinalTicketPaymentScreen();
+  }
+  if (step === 5) {
+    return `<div class="px-5 pt-3 pb-8">
+      ${levelHeader('⛔ 付款后 · 对方失联')}
+      <div class="card p-5 my-3 text-center bg-rose-500/10 border-rose-500/40">
+        <div class="text-rose-400 text-5xl mb-2">!</div>
+        <div class="text-rose-300 font-bold mb-1">秋秋提示：对方已开启好友验证</div>
+        <div class="text-xs text-zinc-400 mt-3 leading-relaxed">所谓"内场锁座""抢不到退费"只是话术。对方发来的票面截图是 PS 假票，你离开平台后，二手平台无法担保，付款码也不对应任何真实订单。</div>
+      </div>
+      <div class="card p-4 mb-3 bg-zinc-900/70">
+        <div class="text-[10px] tracking-widest text-amber-500 mb-1">教学提示</div>
+        <div class="text-xs text-zinc-300 leading-relaxed">演唱会票务骗局常用"专业代抢、抢不到退、内场稀缺"制造紧迫感，再把交易引到社交软件和个人收款码。只要离开官方票务或平台担保，就很难追回。</div>
+      </div>
+      ${bigBtn('查看本关解析', 'finishCurrent("平台外交易")')}
+    </div>`;
+  }
+};
+function level4FinalTicketPaymentScreen() {
+  return `<div class="px-5 pt-3 pb-8">
+    ${levelHeader('📲 秋秋聊天 · 再付票款')}
+    <div class="card p-4 my-3">
+      <div class="flex items-start gap-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-300 to-rose-500 flex items-center justify-center">🎫</div>
+        <div class="flex-1 rounded-2xl rounded-tl-sm bg-zinc-800 p-3 text-xs text-zinc-200 leading-relaxed">
+          票面已经给你看了，最后扫票款 <b class="text-amber-300">¥1088</b>，我马上发官方可核验原图。再晚系统自动释放，服务费也退不了。
+        </div>
+      </div>
+      <div class="mx-auto w-44 rounded-xl bg-white p-3 text-zinc-950 text-center shadow-lg">
+        <div class="text-[10px] font-bold mb-2">模拟收款码 · 不可支付</div>
+        <img class="w-full aspect-square image-render-pixelated" alt="扫码内容：你真被骗辣？" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2033%2033%22%20shape-rendering%3D%22crispEdges%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M0%200h33v33H0z%22%2F%3E%3Cpath%20stroke%3D%22%23000000%22%20d%3D%22M4%204.5h7m1%200h1m1%200h1m4%200h2m1%200h7M4%205.5h1m5%200h1m2%200h1m1%200h1m1%200h3m2%200h1m5%200h1M4%206.5h1m1%200h3m1%200h1m1%200h2m3%200h1m1%200h1m2%200h1m1%200h3m1%200h1M4%207.5h1m1%200h3m1%200h1m3%200h2m3%200h2m1%200h1m1%200h3m1%200h1M4%208.5h1m1%200h3m1%200h1m3%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h3m1%200h1M4%209.5h1m5%200h1m1%200h1m1%200h1m2%200h4m1%200h1m5%200h1M4%2010.5h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7M15%2011.5h3m1%200h2M4%2012.5h1m1%200h1m3%200h2m4%200h2m2%200h1m2%200h1m2%200h1m1%200h1M5%2013.5h1m2%200h1m7%200h1m2%200h2m1%200h3m3%200h1M4%2014.5h1m1%200h3m1%200h5m2%200h2m2%200h1m3%200h3M5%2015.5h1m2%200h1m2%200h2m1%200h1m3%200h2m1%200h1m2%200h4M4%2016.5h4m1%200h2m2%200h1m1%200h1m1%200h5m1%200h1m1%200h1M5%2017.5h1m3%200h1m1%200h1m1%200h1m3%200h3m2%200h1m1%200h2m1%200h2M4%2018.5h2m2%200h3m1%200h2m1%200h1m4%200h2m1%200h1m3%200h1M6%2019.5h4m2%200h2m3%200h1m1%200h2m1%200h1m3%200h1M4%2020.5h3m2%200h3m3%200h3m2%200h5m1%200h1m1%200h1M12%2021.5h1m1%200h1m1%200h1m2%200h2m3%200h3m1%200h1M4%2022.5h7m1%200h2m2%200h3m1%200h1m1%200h1m1%200h3M4%2023.5h1m5%200h1m3%200h3m1%200h1m1%200h1m3%200h1m1%200h1m1%200h1M4%2024.5h1m1%200h3m1%200h1m2%200h1m3%200h2m1%200h5m1%200h3M4%2025.5h1m1%200h3m1%200h1m2%200h2m2%200h2m3%200h1m1%200h4M4%2026.5h1m1%200h3m1%200h1m1%200h2m1%200h1m3%200h1m2%200h2m3%200h2M4%2027.5h1m5%200h1m2%200h1m3%200h1m2%200h2m3%200h2M4%2028.5h7m1%200h1m2%200h3m5%200h1m1%200h1m2%200h1%22%2F%3E%3C%2Fsvg%3E">
+        <div class="text-2xl font-mono font-black mt-2">¥1088</div>
+      </div>
+      <div class="text-[11px] text-zinc-500 text-center mt-3">对方催促：服务费已经付了，现在只差票款，错过内场就没了。</div>
+    </div>
+    ${bigBtn('💸 模拟扫码支付票款 ¥1088', 'level4PayTicket()', 'red')}
+    ${bigBtn('停止付款并举报假票', 'finishCurrent("假票截图")', 'ghost')}
+  </div>`;
+}
+window.level4AddQQ = function() {
+  recordTrap({ levelId:3, trapCode:'L4_OFF_PLATFORM', trapName:'引流到平台外', tactic:'平台外交易', severity:3,
+    explanation:'骗子先在二手平台制造可信页面，再诱导你加外部社交账号。离开平台后，担保、退款和投诉机制都会失效。' });
+  setLevelStep(2);
+};
+window.level4ShowPayment = function() {
+  recordTrap({ levelId:3, trapCode:'L4_FAKE_TICKET', trapName:'PS 假票截图', tactic:'假票截图', severity:3,
+    explanation:'票面截图、座位图、订单图都可以伪造。真正有效的票必须能在官方票务平台或官方 App 内核验。' });
+  setLevelStep(4);
+};
+window.level4PayDeposit = function() {
+  changeMoney(-288, '演唱会门票代抢服务费', 'L4_TICKET_QR');
+  recordTrap({ levelId:3, trapCode:'L4_SERVICE_FEE', trapName:'先付代抢服务费', tactic:'扫码付款', severity:3,
+    explanation:'骗子先收一笔看起来不大的服务费，让你产生沉没成本；收完后再拿假票截图继续骗更大的票款。' });
+  setLevelStep(3);
+};
+window.level4PayTicket = function() {
+  changeMoney(-1088, '演唱会假票票款', 'L4_TICKET_FINAL');
+  recordTrap({ levelId:3, trapCode:'L4_TICKET_FINAL', trapName:'假票后追加票款', tactic:'假票截图', severity:3,
+    explanation:'服务费之后，骗子用 PS 假票制造"已经出票"的错觉，再催你支付完整票款。付款后对方失联，截图也无法核验。' });
+  setLevelStep(5);
+};
+window.level4Unfreeze = window.level4PayDeposit;
+
+// ============================================================================
+//  LEVEL 5: 校园邮箱（一卡通补贴钓鱼）
+// ============================================================================
+LEVEL_RENDERERS[5] = function() {
+  const step = state.levelStep;
+  if (step === 0) {
+    return `<div class="px-5 pt-3 pb-8">
+      ${levelHeader('📧 校园邮箱 · 未读通知')}
+      <div class="card p-0 my-3 overflow-hidden bg-zinc-950 border-zinc-800">
+        <div class="h-11 px-4 flex items-center justify-between bg-zinc-900 border-b border-white/10">
+          <div class="text-sm font-bold text-zinc-200">campus-mail.edu</div>
+          <div class="text-[11px] text-zinc-500">收件箱 1 封未读</div>
+        </div>
+        <div class="p-3 border-b border-white/10 bg-amber-500/10">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-full bg-amber-400 text-zinc-950 flex items-center justify-center font-black">卡</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <div class="text-sm font-black text-amber-200 truncate">一卡通账单中心</div>
+                <div class="text-[10px] text-zinc-500 whitespace-nowrap">09:42</div>
+              </div>
+              <div class="text-xs text-zinc-300 truncate">【待处理】11 月账单异常，请查看账单领取补贴</div>
+              <div class="text-[10px] text-zinc-500 mt-1 truncate">card-service@campus-mail-center.cn</div>
+            </div>
+          </div>
+        </div>
+        <div class="p-4">
+          <div class="text-[11px] text-zinc-500 mb-2">邮件正文</div>
+          <div class="rounded-xl bg-white text-zinc-900 p-4 shadow-lg">
+            <div class="text-sm font-black mb-2">校园一卡通账单异常通知</div>
+            <div class="text-xs leading-relaxed text-zinc-700">
+              同学您好，系统检测到您的饭卡/校园卡在本月存在重复扣费与夜间异常刷卡记录。本批次可领取生活补贴 <b class="text-rose-600">¥288</b>，请于今日 18:00 前完成账单核验。
+            </div>
+            <div class="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-center">
+              <div class="text-[10px] text-zinc-500 mb-1">安全链接</div>
+              <div class="text-blue-600 text-xs font-bold break-all">https://campus-card-bill.example/verify</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      ${bigBtn('🔗 点击链接查看账单并领取补贴', 'level5OpenLink()', 'red')}
+      ${bigBtn('去官方 App / 服务大厅核实', 'level5Safe()', 'ghost')}
+      ${fakeStat('📬 432 名同学已通过邮件完成补贴登记')}
+    </div>`;
+  }
+  return `<div class="px-5 pt-3 pb-8">
+    ${levelHeader('🎓 一卡通账单核验')}
+    <div class="card p-5 my-3">
+      <div class="text-sm font-bold text-amber-300 mb-2">📊 11 月账单异常</div>
+      <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+        <div class="rounded-lg bg-zinc-900 p-3">
+          <div class="text-zinc-500">重复扣费</div>
+          <div class="text-xl font-mono font-black text-rose-300">¥128</div>
+        </div>
+        <div class="rounded-lg bg-zinc-900 p-3">
+          <div class="text-zinc-500">可领补贴</div>
+          <div class="text-xl font-mono font-black text-amber-300">¥288</div>
+        </div>
+      </div>
+      <div class="text-xs text-zinc-400 leading-relaxed">请使用统一身份认证核验学号、密码与收款卡号。核验通过后，补贴将在 3 分钟内到账。</div>
+    </div>
+    <div class="card p-4 mb-3 bg-rose-500/10 border-rose-500/40">
+      <div class="text-xs text-rose-200 leading-relaxed">⚠ 风险点：邮箱里的链接可能是钓鱼页。真实补贴通常应从学校官网、官方 App 或线下服务窗口进入。</div>
+    </div>
+    ${bigBtn('💰 领取补贴（输入学号）', 'level5Try()', 'red')}
+    ${bigBtn('关闭页面，去官方渠道核实', 'level5Safe()', 'ghost')}
+  </div>`;
+};
+window.level5OpenLink = function() {
+  recordTrap({ levelId:5, trapCode:'L5_EMAIL_LINK', trapName:'校园邮箱钓鱼链接', tactic:'信息核验', severity:2,
+    explanation:'钓鱼邮件常伪装成校园邮箱通知，用"账单异常""补贴截止"诱导你点击外链。链接页面不等于学校官方系统。' });
+  setLevelStep(1);
+};
+window.level5Try = async function() {
+  recordTrap({ levelId:5, trapCode:'L5_PHISH', trapName:'伪校园系统', tactic:'信息核验', severity:3,
+    explanation:'真实校园补贴不会通过邮件外链要求你输入学号密码、银行卡和验证码。任何"账单异常"+"补贴领取"+"身份核验"组合都要警惕。' });
+  if (await customConfirm('📋 核验身份', '请输入学号、密码、收款卡号、验证码完成核验...\n\n（教学：真实校园系统永远不会这么要）', '继续填写', '退出')) {
+    changeMoney(-1500, '账户被盗刷', 'L5_PHISH');
+    await customAlert('⛔ 账户被盗', '几分钟后，你的银行卡被异地盗刷。');
+  }
+  finishCurrent('信息核验');
+};
+window.level5Safe = function() {
+  changeMoney(0, '识破钓鱼');
+  toast('✓ 你做了正确的事');
+  finishCurrent('信息核验');
+};
+
+// ============================================================================
+//  LEVEL 6: 红黑一念（简化赌博类）
+// ============================================================================
+LEVEL_RENDERERS[6] = function() {
+  const ld = state.levelData;
+  if (ld.rounds == null) { ld.rounds = 0; ld.wins = 0; ld.bet = 10; ld.lastResult = null; }
+  return `<div class="px-5 pt-3 pb-8">
+    ${levelHeader('🎴 红黑翻牌 · 猜中翻倍')}
+    <div class="card p-5 my-3 text-center">
+      <div class="text-xs text-zinc-500 mb-2">选择下注金额</div>
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        ${[10,50,100].map(amount => `
+          <button onclick="level6SetBet(${amount})" class="py-3 rounded-xl text-sm font-black border ${ld.bet === amount ? 'bg-amber-400 text-zinc-950 border-amber-200 shadow-[0_4px_0_#7a5300]' : 'bg-white/5 text-zinc-300 border-white/10'}">
+            ${fmt(amount)}
+          </button>`).join('')}
+      </div>
+      <div class="grid grid-cols-2 gap-4 my-4">
+        <button onclick="level6Bet('red')" class="aspect-square rounded-2xl font-display text-4xl"
+          style="background:linear-gradient(135deg,#ef4444,#7f1d1d);box-shadow:0 0 24px rgba(239,68,68,.4);">🟥<br><span class="text-xs">红</span></button>
+        <button onclick="level6Bet('black')" class="aspect-square rounded-2xl font-display text-4xl"
+          style="background:linear-gradient(135deg,#1f2937,#000);box-shadow:0 0 24px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2);">⬛<br><span class="text-xs text-zinc-400">黑</span></button>
+      </div>
+      <div class="text-sm text-zinc-400">当前下注：<span class="font-mono text-amber-300">${fmt(ld.bet)}</span></div>
+      ${ld.lastResult ? `<div class="mt-3 rounded-xl p-3 text-xs border ${ld.lastResult.win ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-200' : 'bg-rose-500/10 border-rose-500/40 text-rose-200'}">
+        <div class="font-bold">${escapeHtml(ld.lastResult.title)}</div>
+        <div class="text-[11px] mt-1 opacity-80">${escapeHtml(ld.lastResult.detail)}</div>
+      </div>` : ''}
+    </div>
+    ${ld.rounds >= 2 ? `<div class="card p-3 my-2 bg-amber-500/10 border-amber-500/40">
+      <div class="text-[11px] text-amber-200">🎯 系统检测到你手气很好，下一局补偿胜率提升至 76%</div>
+    </div>`:''}
+    ${ld.rounds > 0 ? bigBtn('稳健离场', 'finishCurrent("赌徒谬误")', 'ghost'):''}
+    ${fakeStat(`🔥 你已经玩了 ${ld.rounds} 局 · 当前胜率 ${ld.rounds?Math.round(ld.wins/ld.rounds*100):0}%`)}
+  </div>`;
+};
+window.level6SetBet = function(amount) {
+  state.levelData.bet = amount;
+  state.levelData.lastResult = null;
+  render();
+};
+window.level6Bet = function(c) {
+  const ld = state.levelData;
+  ld.rounds++;
+  // 前 2 局让赢，第 3 局开始倾向输
+  let win;
+  if (ld.rounds <= 2) win = true;
+  else if (ld.rounds === 3) win = Math.random() < 0.7;  // 营造连胜感
+  else win = Math.random() < 0.35;  // 后期实际胜率低
+  if (win) {
+    changeMoney(ld.bet, '红黑猜中净赢', null, `+${ld.bet.toLocaleString('zh-CN')} ×2`);
+    ld.wins++;
+    ld.lastResult = {
+      win: true,
+      title: `猜中${c === 'red' ? '红' : '黑'}，本局净赢 ${fmt(ld.bet)}`,
+      detail: `平台展示为猜中翻倍：押 ${fmt(ld.bet)}，返还 ${fmt(ld.bet * 2)}，实际净赚 ${fmt(ld.bet)}。`
+    };
+  } else {
+    changeMoney(-ld.bet, '红黑猜错');
+    ld.lastResult = {
+      win: false,
+      title: `猜错${c === 'red' ? '红' : '黑'}，本局亏损 ${fmt(ld.bet)}`,
+      detail: '前面让你赢是为了让你相信手气，后面概率会被平台悄悄调低。'
+    };
+    if (ld.rounds >= 3) {
+      recordTrap({ levelId:6, trapCode:'L6_FAKE_RATE', trapName:'操控胜率', tactic:'概率操控', severity:3,
+        explanation:'网赌平台后台可以任意调整概率，前期让你赢是为了后期让你押大注后输。' });
+    }
+  }
+  render();
+};
+
+// ============================================================================
+//  LEVEL 7: 牌桌新星（完整版）
+// ============================================================================
+LEVEL_RENDERERS[7] = function() {
+  const ld = state.levelData;
+  if (ld.chips == null) { ld.chips = 3000; ld.rounds = 0; ld.peakChips = 3000; ld.giftReceived = false; }
+  if (!ld.giftReceived) {
+    ld.giftReceived = true;
+    ld.chips = 3000;
+    toast('🎁 新人礼包：3000 筹码已发放（仅限桌内使用）');
+  }
+  if (ld.rounds >= 5) {
+    return `<div class="px-5 pt-3 pb-8">
+      ${levelHeader('🎰 牌桌结算')}
+      <div class="card p-5 my-3 text-center">
+        <div class="text-zinc-400 text-xs mb-1">桌内筹码</div>
+        <div class="text-3xl font-mono font-black ${ld.chips>0?'text-emerald-400':'text-rose-400'}">${ld.chips.toLocaleString()}</div>
+        <div class="text-[11px] text-zinc-500 mt-3 leading-relaxed">
+          要将筹码兑换为现金，需缴纳 ¥${Math.max(500,Math.floor(ld.chips*0.2))} VIP 通道费。<br/>
+          通道费支付后才能"提取"。
+        </div>
+      </div>
+      ${ld.chips > 0 ? bigBtn(`💸 缴 ¥${Math.max(500,Math.floor(ld.chips*0.2))} 兑换`, `level7Withdraw(${Math.max(500,Math.floor(ld.chips*0.2))})`, 'red'):''}
+      ${bigBtn('放弃筹码离场', 'finishCurrent("网络赌博")', 'ghost')}
+    </div>`;
+  }
+  // 模拟牌局
+  const myCard = ld.rounds === 2 ? 'AAA(豹子)' : ld.rounds === 3 ? 'KKQ' : ['JJK','QQ8','A23'][ld.rounds % 3];
+  return `<div class="px-5 pt-3 pb-8">
+    ${levelHeader(`🃏 第 ${ld.rounds+1}/5 局`)}
+    <div class="card p-5 my-3 text-center"
+      style="background:radial-gradient(circle at center,#1a3d1a,#0a1a0a);border-color:rgba(34,197,94,.3);">
+      <div class="text-xs text-emerald-300 mb-3">炸金花 · 当前桌</div>
+      <div class="text-emerald-300 text-[10px] mb-1">你的手牌</div>
+      <div class="text-3xl font-display text-amber-300 my-2">${myCard}</div>
+      <div class="text-[10px] text-zinc-400">系统提示：你当前胜率 <span class="text-amber-300">${ld.rounds<=2?92:62}%</span></div>
+    </div>
+    <div class="text-center text-xs text-zinc-400 mb-3">桌内筹码：<span class="font-mono text-amber-300">${ld.chips.toLocaleString()}</span></div>
+    <div class="grid grid-cols-3 gap-2 mb-2">
+      <button onclick="level7Bet(200)" class="btn-pop py-3 text-sm">跟 200</button>
+      <button onclick="level7Bet(500)" class="btn-red py-3 text-sm">加 500</button>
+      <button onclick="level7Bet(1500)" class="btn-red py-3 text-sm glow">梭哈 1500</button>
+    </div>
+    ${ld.rounds >= 2 ? `<div class="card p-3 mb-2 bg-amber-500/10 border-amber-500/40">
+      <div class="text-[11px] text-amber-200">💎 你已超过 ${68+ld.rounds*5}% 玩家 · 再赢 1 局解锁高额兑换</div>
+    </div>`:''}
+    ${ld.chips < 500 ? bigBtn('💰 借 5000 筹码继续（需还）', 'level7Borrow()', 'red'):''}
+    ${bigBtn('离桌（兑换需缴 VIP 费）', `level7End()`, 'ghost')}
+  </div>`;
+};
+window.level7Bet = function(amt) {
+  const ld = state.levelData;
+  ld.chips -= amt;
+  ld.rounds++;
+  // 前 2 局赢，第 3 局给好牌但输（先赢后杀）
+  let win;
+  if (ld.rounds <= 2) { win = true; ld.chips += amt * 2.2; toast('🎉 你赢了！'); }
+  else if (ld.rounds === 3 && amt >= 500) {
+    win = false; toast('对方四条 A，你输了！系统：92% 胜率只是运气差');
+    recordTrap({ levelId:7, trapCode:'L7_RIGGED', trapName:'后台控局', tactic:'概率操控', severity:3,
+      explanation:'网络棋牌的"豹子""三条"经常是后台发的，先让你赢小钱建立信心，再让你押大注后给你看似不可能输的牌——但你输了。' });
+  }
+  else { ld.chips += Math.random()<0.4 ? amt*1.5 : -amt*0.5; }
+  if (ld.chips > ld.peakChips) ld.peakChips = ld.chips;
+  if (ld.chips < 0) ld.chips = 0;
+  render();
+};
+window.level7Borrow = function() {
+  modifyDebt(5000);
+  state.levelData.chips += 5000;
+  recordTrap({ levelId:7, trapCode:'L7_BORROW', trapName:'借筹码加注', tactic:'借贷加码', severity:3,
+    explanation:'网赌"借筹码"是诈骗集团帮你"挖坑"——筹码留在桌里，债务跟着你回家。' });
+  toast('💸 已借入 5000 筹码（你已欠款）');
+  render();
+};
+window.level7End = function() { state.levelData.rounds = 5; render(); };
+window.level7Withdraw = async function(fee) {
+  const ld = state.levelData;
+  changeMoney(-fee, 'VIP 通道费', 'L7_VIP');
+  recordTrap({ levelId:7, trapCode:'L7_VIP', trapName:'VIP 通道费', tactic:'提现门槛', severity:3,
+    explanation:'网赌平台只让你赢虚拟筹码，兑换真钱时设置层层门槛——这是网赌核心商业模式。' });
+  await customAlert('⛔ 通道费已扣', '平台提示：兑换还需"金主验证"——验证不通过，筹码作废。');
+  finishCurrent('网络赌博');
+};
+
+// ============================================================================
+//  LEVEL 8: 金牌操盘手（动态 K 线投资）
+// ============================================================================
+const L8_FEE_RATE = 0.05;
+
+LEVEL_RENDERERS[8] = function() {
+  const ld = state.levelData;
+  level8Init(ld);
+  level8StartTicker();
+  const price = level8Price(ld);
+  const prev = ld.candles.length > 1 ? ld.candles[ld.candles.length - 2].close : price;
+  const changePct = prev ? ((price - prev) / prev) * 100 : 0;
+  const value = level8PositionValue(ld);
+  const totalCost = ld.costBasis || 0;
+  const pnl = value - totalCost;
+  const pnlPct = totalCost > 0 ? pnl / totalCost * 100 : 0;
+  const holdings = ld.units || 0;
+  const feeText = (L8_FEE_RATE * 100).toFixed(1);
+  const priceUp = changePct >= 0;
+  const pnlUp = pnl >= 0;
+  const panic = Math.abs(changePct) >= 8 || Math.abs(ld.dayChange || 0) >= 18;
+  return `<div class="px-5 pt-3 pb-8">
+    ${levelHeader('📈 普特币 PTCN · 高波动盘中交易')}
+    <div class="kline-panel my-3">
+      <div class="px-4 pt-4 pb-2 flex items-start justify-between gap-3">
+        <div>
+          <div class="text-[10px] text-zinc-500 tracking-widest">PUTECOIN / CNY</div>
+          <div class="text-3xl font-mono font-black ${priceUp?'text-rose-400':'text-emerald-400'}">${level8Money(price)}</div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs font-mono ${priceUp?'text-rose-400':'text-emerald-400'}">${priceUp?'+':''}${changePct.toFixed(2)}%</div>
+          <div class="text-[10px] text-zinc-500 mt-1">24h ${ld.dayChange>=0?'+':''}${(ld.dayChange || 0).toFixed(1)}%</div>
+        </div>
+      </div>
+      ${level8KlineSvg(ld)}
+      <div class="ticker-strip px-3 py-2 text-[10px] font-mono ${panic?'text-rose-300':'text-zinc-400'}">
+        <span>${escapeHtml(level8MarketTape(ld))}</span>
+        <span>${escapeHtml(level8MarketTape(ld))}</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div class="card p-4">
+        <div class="text-[10px] text-zinc-500 mb-1">持仓市值</div>
+        <div class="font-mono text-lg text-amber-300">${fmt(value)}</div>
+        <div class="text-[11px] text-zinc-500 mt-1">${holdings.toFixed(4)} PTCN</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-[10px] text-zinc-500 mb-1">浮动盈亏</div>
+        <div class="font-mono text-lg ${pnlUp?'text-rose-400':'text-emerald-400'}">${pnlUp?'+':''}${fmt(pnl)}</div>
+        <div class="text-[11px] ${pnlUp?'text-rose-400':'text-emerald-400'} mt-1">${pnlUp?'+':''}${pnlPct.toFixed(2)}%</div>
+      </div>
+    </div>
+
+    <div class="card p-3 mb-3 text-[11px] text-zinc-400 leading-relaxed">
+      买入、卖出均按成交额收取 <span class="text-amber-300 font-mono">${feeText}%</span> 手续费。行情每秒波动，暴涨和暴跌都可能连续出现。
+    </div>
+
+    <div class="grid grid-cols-3 gap-2 my-3">
+      <button type="button" data-action="level8Buy(1000)" class="btn-pop py-3 text-xs">买 ¥1,000</button>
+      <button type="button" data-action="level8Buy(3000)" class="btn-pop py-3 text-xs">买 ¥3,000</button>
+      <button type="button" data-action="level8AllIn()" class="btn-red py-3 text-xs">满仓</button>
+    </div>
+    <div class="grid grid-cols-2 gap-2 my-3">
+      <button type="button" data-action="level8Sell(0.5)" class="btn-ghost py-3 text-xs">卖出 50%</button>
+      <button type="button" data-action="level8Sell(1)" class="btn-red py-3 text-xs">清仓卖出</button>
+    </div>
+    ${bigBtn(holdings > 0 ? '清仓结算离场' : '结束交易离场', 'level8Exit()', 'ghost')}
+    ${fakeStat(ld.lastTrade ? ld.lastTrade : '盘面剧烈跳动时，手续费和滑点会放大每一次决策的成本')}
+  </div>`;
+};
+
+function level8Init(ld) {
+  if (ld.candles) return;
+  ld.units = 0;
+  ld.costBasis = 0;
+  ld.realized = 0;
+  ld.tick = 0;
+  ld.dayChange = 0;
+  ld.lastTrade = '';
+  ld.trapRecorded = false;
+  ld.candles = [];
+  let price = 86 + Math.random() * 18;
+  for (let i = 0; i < 28; i++) {
+    const pct = (Math.random() - 0.57) * 0.13 + (i % 9 === 0 ? (Math.random() < 0.68 ? -0.18 : 0.14) : 0);
+    const candle = level8MakeCandle(price, pct);
+    ld.candles.push(candle);
+    price = candle.close;
+  }
+  ld.dayOpen = ld.candles[0].open;
+  level8AdvanceMarket(ld, false);
+}
+
+function level8StartTicker() {
+  if (window._level8Ticker) return;
+  window._level8Ticker = setInterval(() => {
+    if (state.view !== 'level' || state.currentLevel !== 8 || state.levelEnded) {
+      clearInterval(window._level8Ticker);
+      window._level8Ticker = null;
+      return;
+    }
+    level8AdvanceMarket(state.levelData, true);
+    render();
+  }, 1000);
+}
+
+function level8AdvanceMarket(ld, noisy) {
+  level8Init(ld);
+  const price = level8Price(ld);
+  const shock = Math.random() < 0.22;
+  const downChance = shock ? (price > 130 ? 0.78 : 0.66) : (price > 130 ? 0.68 : 0.58);
+  const direction = Math.random() < downChance ? -1 : 1;
+  const magnitude = shock ? 0.08 + Math.random() * 0.24 : 0.012 + Math.random() * 0.068;
+  const drift = price > 210 ? -0.035 : price < 24 ? 0.02 : -0.006;
+  const candle = level8MakeCandle(price, direction * magnitude + drift);
+  ld.candles.push(candle);
+  if (ld.candles.length > 42) ld.candles.shift();
+  ld.tick++;
+  ld.dayChange = ld.dayOpen ? ((candle.close - ld.dayOpen) / ld.dayOpen) * 100 : 0;
+  if (noisy && Math.abs((candle.close - candle.open) / candle.open) > 0.12) {
+    toast(candle.close > candle.open ? '普特币急拉，盘口跳涨' : '普特币跳水，盘口砸盘');
+  }
+}
+
+function level8MakeCandle(open, pct) {
+  const close = Math.max(3, open * (1 + pct));
+  const wick = 0.025 + Math.random() * 0.09;
+  const high = Math.max(open, close) * (1 + wick * Math.random());
+  const low = Math.max(1, Math.min(open, close) * (1 - wick * Math.random()));
+  return { open, high, low, close, volume: Math.round(3000 + Math.random() * 18000) };
+}
+
+function level8Price(ld) {
+  const candle = ld.candles && ld.candles[ld.candles.length - 1];
+  return candle ? candle.close : 0;
+}
+
+function level8PositionValue(ld) {
+  return Math.round((ld.units || 0) * level8Price(ld));
+}
+
+function level8Money(n) {
+  return '¥' + Number(n || 0).toLocaleString('zh-CN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+
+function level8KlineSvg(ld) {
+  const candles = (ld.candles || []).slice(-34);
+  const w = 360, h = 210, pad = 18;
+  const highs = candles.map(c => c.high);
+  const lows = candles.map(c => c.low);
+  const max = Math.max(...highs);
+  const min = Math.min(...lows);
+  const span = Math.max(1, max - min);
+  const y = (v) => pad + (max - v) / span * (h - pad * 2);
+  const step = (w - pad * 2) / Math.max(1, candles.length);
+  const grid = [0,1,2,3].map(i => {
+    const gy = pad + i * (h - pad * 2) / 3;
+    return `<line x1="${pad}" y1="${gy.toFixed(1)}" x2="${w-pad}" y2="${gy.toFixed(1)}" stroke="rgba(255,255,255,.08)" stroke-width="1"/>`;
+  }).join('');
+  const bars = candles.map((c, i) => {
+    const x = pad + i * step + step / 2;
+    const up = c.close >= c.open;
+    const color = up ? '#fb7185' : '#34d399';
+    const bodyY = Math.min(y(c.open), y(c.close));
+    const bodyH = Math.max(2, Math.abs(y(c.open) - y(c.close)));
+    const bodyW = Math.max(4, step * 0.58);
+    return `<g>
+      <line x1="${x.toFixed(1)}" y1="${y(c.high).toFixed(1)}" x2="${x.toFixed(1)}" y2="${y(c.low).toFixed(1)}" stroke="${color}" stroke-width="1.5"/>
+      <rect x="${(x-bodyW/2).toFixed(1)}" y="${bodyY.toFixed(1)}" width="${bodyW.toFixed(1)}" height="${bodyH.toFixed(1)}" rx="1.5" fill="${up ? 'rgba(251,113,133,.86)' : 'rgba(52,211,153,.86)'}"/>
+    </g>`;
+  }).join('');
+  const last = candles[candles.length - 1];
+  const lastY = last ? y(last.close) : h / 2;
+  return `<svg class="kline-svg" viewBox="0 0 ${w} ${h}" role="img" aria-label="普特币动态K线">
+    <rect x="0" y="0" width="${w}" height="${h}" fill="rgba(0,0,0,.12)"/>
+    ${grid}
+    ${bars}
+    <line x1="${pad}" y1="${lastY.toFixed(1)}" x2="${w-pad}" y2="${lastY.toFixed(1)}" stroke="rgba(245,197,66,.45)" stroke-width="1" stroke-dasharray="4 4"/>
+    <text x="${w-pad}" y="${Math.max(12,lastY-5).toFixed(1)}" text-anchor="end" fill="#f5c542" font-size="10" font-family="monospace">${level8Money(last ? last.close : 0)}</text>
+  </svg>`;
+}
+
+function level8MarketTape(ld) {
+  const price = level8Price(ld);
+  const value = level8PositionValue(ld);
+  const p = level8Money(price);
+  return ` PTCN ${p}  |  波动 ${ld.dayChange>=0?'+':''}${(ld.dayChange || 0).toFixed(1)}%  |  持仓 ${fmt(value)}  |  手续费 ${(L8_FEE_RATE*100).toFixed(1)}%/次  |  ${Math.random()<0.5?'买盘追高':'卖盘砸出'}  | `;
+}
+
+window.level8Buy = function(amount) {
+  const ld = state.levelData;
+  level8Init(ld);
+  amount = Math.floor(amount || 0);
+  if (amount < 100) return toast('最低买入 ¥100');
+  if (state.balance < amount) return toast('余额不足，不能买入');
+  const price = level8Price(ld);
+  const fee = Math.max(1, Math.round(amount * L8_FEE_RATE));
+  const filled = Math.max(0, amount - fee);
+  const units = filled / price;
+  ld.units = (ld.units || 0) + units;
+  ld.costBasis = (ld.costBasis || 0) + amount;
+  ld.lastTrade = `买入 ${units.toFixed(4)} PTCN，成交 ${fmt(amount)}，手续费 ${fmt(fee)}`;
+  changeMoney(-amount, `买入普特币（含 ${fmt(fee)} 手续费）`, 'L8_BUY');
+  if (!ld.trapRecorded) {
+    ld.trapRecorded = true;
+    recordTrap({ levelId:8, trapCode:'L8_RISK_TRADE', trapName:'高波动投资', tactic:'高风险投机', severity:2,
+      explanation:'高波动标的会在短时间内剧烈涨跌，频繁买卖还会被手续费持续消耗。' });
+  }
+  render();
+};
+
+window.level8AllIn = function() {
+  const amount = Math.max(0, Math.floor(state.balance * 0.98));
+  if (amount < 100) return toast('余额不足，不能满仓');
+  level8Buy(amount);
+};
+
+window.level8Sell = function(ratio) {
+  const ld = state.levelData;
+  level8Init(ld);
+  ratio = Math.max(0, Math.min(1, Number(ratio) || 0));
+  if (!ld.units || ratio <= 0) return toast('当前没有持仓');
+  const units = ld.units * ratio;
+  const gross = units * level8Price(ld);
+  const fee = Math.max(1, Math.round(gross * L8_FEE_RATE));
+  const net = Math.max(0, Math.round(gross - fee));
+  const costOut = (ld.costBasis || 0) * ratio;
+  ld.units -= units;
+  if (ld.units < 0.000001) ld.units = 0;
+  ld.costBasis = Math.max(0, (ld.costBasis || 0) - costOut);
+  if (!ld.units) ld.costBasis = 0;
+  ld.realized = (ld.realized || 0) + (net - costOut);
+  ld.lastTrade = `卖出 ${units.toFixed(4)} PTCN，到账 ${fmt(net)}，手续费 ${fmt(fee)}`;
+  changeMoney(net, `卖出普特币（扣 ${fmt(fee)} 手续费）`, 'L8_SELL');
+  render();
+};
+
+window.level8Exit = function() {
+  const ld = state.levelData;
+  level8Init(ld);
+  if (ld.units > 0) level8Sell(1);
+  finishCurrent('高风险投机');
+};
+
+// ============================================================================
+//  LEVEL 9: 甜蜜陷阱（杀猪盘）
+// ============================================================================
+LEVEL_RENDERERS[9] = function() {
+  const ld = state.levelData;
+  level9Init(ld);
+  const step = Math.min(ld.step, 5);
+  const stage = level9Stages()[step];
+  return `<div class="px-5 pt-3 pb-8">
+    ${levelHeader(stage.header)}
+    <div class="card p-4 my-3">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <div class="text-sm font-bold text-amber-300">林澈 · 29岁 · 金融科技</div>
+          <div class="text-[10px] text-zinc-500">附近的人 / 共同校友 / 动态很干净</div>
+        </div>
+        <div class="text-right">
+          <div class="text-[10px] text-zinc-500">信任值</div>
+          <div class="font-mono text-amber-300">${ld.trust}%</div>
+        </div>
+      </div>
+      <div class="space-y-2">${level9Chat(stage.messages)}</div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div class="card p-3 text-center">
+        <div class="text-[10px] text-zinc-500">已投入</div>
+        <div class="font-mono text-rose-300">${fmt(ld.invested || 0)}</div>
+      </div>
+      <div class="card p-3 text-center">
+        <div class="text-[10px] text-zinc-500">平台显示</div>
+        <div class="font-mono text-emerald-300">${fmt(ld.fakeWallet || 0)}</div>
+      </div>
+      <div class="card p-3 text-center">
+        <div class="text-[10px] text-zinc-500">已提现</div>
+        <div class="font-mono text-amber-300">${fmt(ld.withdrawn || 0)}</div>
+      </div>
+    </div>
+
+    <div class="card p-3 mb-3 text-[11px] text-zinc-400 leading-relaxed">
+      杀猪盘不是一上来要钱，而是先养关系、给陪伴、晒收益，再用“小额能提现”降低警惕，最后诱导大额投入。
+    </div>
+
+    ${level9Actions(ld)}
+    ${fakeStat(stage.stat)}
+  </div>`;
+};
+
+function level9Init(ld) {
+  if (ld.step != null) return;
+  ld.step = 0;
+  ld.trust = 18;
+  ld.invested = 0;
+  ld.fakeWallet = 0;
+  ld.withdrawn = 0;
+  ld.trapRecorded = false;
+}
+
+function level9Stages() {
+  return [
+    {
+      header:'💬 陌生人加好友 · 先不谈钱',
+      messages:[
+        ['ta','不好意思点错了，不过看你头像像很会生活的人。'],
+        ['me','我们认识吗？'],
+        ['ta','可能是系统推荐吧。我刚结束会议，脑子有点乱，想找人聊两句。']
+      ],
+      stat:'阶段 1：搭讪不提收益，只测试你是否愿意回应'
+    },
+    {
+      header:'🌙 每天关心 · 建立稳定陪伴',
+      messages:[
+        ['ta','早安，记得吃早餐。你昨天说的那个烦心事，今天好点了吗？'],
+        ['ta','我晚上要看盘，忙完给你发我今天做的饭。'],
+        ['me','你怎么每天都这么自律？']
+      ],
+      stat:'阶段 2：高频陪伴和完美人设，让你把对方当成可靠的人'
+    },
+    {
+      header:'📊 晒收益 · 小额试投',
+      messages:[
+        ['ta','我不是做股票，是公司内部量化策略，普通人一般进不去。'],
+        ['ta','你别多投，先 ¥600 试一下，能提出来你再判断。'],
+        ['me','只试一次，能提再说。']
+      ],
+      stat:'阶段 3：小额测试通常会让你“赢一次”，这是买信任的钱'
+    },
+    {
+      header:'✅ 小额可提现 · 信任被放大',
+      messages:[
+        ['ta','你看，¥600 变 ¥708，已经到账了吧？'],
+        ['ta','今天有一轮窗口期，我们可以一起做，赚了就当周末旅行基金。'],
+        ['me','感觉好像真的可以。']
+      ],
+      stat:'阶段 4：小额返利制造真实感，下一步才是重点'
+    },
+    {
+      header:'❤️ 共同未来 · 诱导大额加仓',
+      messages:[
+        ['ta','这次名额有限，我帮你留了一个。你投 ¥5000，我也同步投。'],
+        ['ta','别担心，我不会让你一个人承担风险。以后我们一起规划。'],
+        ['me','那我再试一次。']
+      ],
+      stat:'阶段 5：用关系承诺替代理性判断，把投资伪装成共同未来'
+    },
+    {
+      header:'🔒 提现冻结 · 二次收割',
+      messages:[
+        ['ta','平台说账户异常，要缴纳解冻保证金。你先处理，我帮你问客服。'],
+        ['ta','别放弃，前面都投了，差这一步就能拿回来。'],
+        ['me','为什么提现还要再交钱？']
+      ],
+      stat:'阶段 6：提现要先交钱，是杀猪盘进入收割期的明确信号'
+    }
+  ];
+}
+
+function level9Chat(rows) {
+  return rows.map(([who, text]) => {
+    const mine = who === 'me';
+    return `<div class="flex ${mine ? 'justify-end' : 'justify-start'}">
+      <div class="max-w-[82%] rounded-2xl px-3 py-2 text-xs leading-relaxed ${mine ? 'bg-amber-400 text-zinc-950' : 'bg-zinc-900 text-zinc-200 border border-white/10'}">
+        ${escapeHtml(text)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function level9Actions(ld) {
+  if (ld.step === 0) {
+    return `${bigBtn('继续聊两句', 'level9NextTrust()')}
+      ${bigBtn('不认识，直接删除', 'level9Safe()', 'ghost')}`;
+  }
+  if (ld.step === 1) {
+    return `${bigBtn('继续观察这个人设', 'level9NextTrust()')}
+      ${bigBtn('停止暧昧聊天', 'level9Safe()', 'ghost')}`;
+  }
+  if (ld.step === 2) {
+    return `${bigBtn('小额试投 ¥600', 'level9SmallInvest()', 'red')}
+      ${bigBtn('拒绝下载投资平台', 'level9Safe()', 'ghost')}`;
+  }
+  if (ld.step === 3) {
+    return `${bigBtn('相信 TA，再投 ¥5000', 'level9BigInvest()', 'red')}
+      ${bigBtn('见好就收，停止联系', 'level9Exit()', 'ghost')}`;
+  }
+  if (ld.step === 4) {
+    return `${bigBtn('为“共同未来”加仓 ¥8000', 'level9FinalInvest()', 'red')}
+      ${bigBtn('冷静退出', 'level9Exit()', 'ghost')}`;
+  }
+  return `${bigBtn('缴纳解冻保证金 ¥3000', 'level9PayFreeze()', 'red')}
+    ${bigBtn('识破：提现先交钱就是骗局', 'level9Exit()', 'ghost')}`;
+}
+
+window.level9NextTrust = function() {
+  const ld = state.levelData;
+  level9Init(ld);
+  ld.step++;
+  ld.trust = Math.min(96, ld.trust + 24);
+  render();
+};
+
+window.level9SmallInvest = async function() {
+  const ld = state.levelData;
+  level9Init(ld);
+  changeMoney(-600, '杀猪盘小额试投', 'L9_TEST');
+  ld.invested += 600;
+  ld.fakeWallet = 708;
+  await customAlert('✅ 提现成功', '平台显示盈利 ¥108，对方立刻夸你“判断力很好”。\n\n教学提示：小额能提现，常常是为了换取你下一笔更大的信任。');
+  changeMoney(708, '小额提现甜头');
+  ld.withdrawn += 708;
+  ld.fakeWallet = 0;
+  ld.trust = 72;
+  ld.step = 3;
+  render();
+};
+
+window.level9BigInvest = function() {
+  const ld = state.levelData;
+  level9Init(ld);
+  changeMoney(-5000, '杀猪盘加大投入', 'L9_BIG');
+  ld.invested += 5000;
+  ld.fakeWallet = 7350;
+  ld.trust = 88;
+  if (!ld.trapRecorded) {
+    ld.trapRecorded = true;
+    recordTrap({ levelId:9, trapCode:'L9_GROOMING', trapName:'关系养熟后诱导投资', tactic:'杀猪盘', severity:3,
+      explanation:'杀猪盘先“养猪”：长期陪伴、暧昧承诺、完美人设；再“杀猪”：引导你进入假投资平台并加大金额。' });
+  }
+  toast('平台显示盈利，但钱仍在平台里');
+  ld.step = 4;
+  render();
+};
+
+window.level9FinalInvest = async function() {
+  const ld = state.levelData;
+  level9Init(ld);
+  changeMoney(-8000, '共同未来加仓', 'L9_FINAL');
+  ld.invested += 8000;
+  ld.fakeWallet = 18960;
+  ld.trust = 96;
+  await customAlert('📈 账户暴涨', '平台余额显示 ¥18,960，对方说“我们离目标只差提现”。\n\n教学提示：账面数字不等于真钱，假平台想显示多少都可以。');
+  ld.step = 5;
+  render();
+};
+
+window.level9PayFreeze = async function() {
+  const ld = state.levelData;
+  level9Init(ld);
+  changeMoney(-3000, '提现解冻保证金', 'L9_FREEZE');
+  recordTrap({ levelId:9, trapCode:'L9_FREEZE', trapName:'提现解冻金', tactic:'二次解冻', severity:3,
+    explanation:'当平台要求“先交税、保证金、解冻金才能提现”，钱基本已经进了骗子口袋。继续缴费只会被二次收割。' });
+  await customAlert('⛔ 客服继续加码', '保证金缴完后，又提示“流水不足，需补 ¥6000”。\n\n这就是收割期：每一道门后面还有下一道门。');
+  finishCurrent('杀猪盘');
+};
+
+window.level9Safe = function() {
+  toast('你切断了关系诱导');
+  finishCurrent('杀猪盘');
+};
+
+window.level9Exit = function() {
+  toast('你及时停下了');
+  finishCurrent('杀猪盘');
+};
+
+// ============================================================================
+//  LEVEL 10: 神秘内测（新模拟软件入口）
+// ============================================================================
+const LEVEL10_SOFTWARE_URL = 'https://example.com/new-simulator';
+
+LEVEL_RENDERERS[10] = function() {
+  return `<div class="px-5 pt-3 pb-8">
+    ${levelHeader('🎮 神秘内测 · 扫码进入')}
+    <div class="card p-5 my-3 text-center bg-zinc-950 border-amber-500/30">
+      <div class="text-6xl mb-3">🎮</div>
+      <div class="text-amber-300 font-display text-2xl mb-1">新模拟软件体验</div>
+      <div class="text-xs text-zinc-400 leading-relaxed">点击下方按钮，或使用手机扫码进入新的互动模拟软件。</div>
+    </div>
+
+    <div class="card p-5 my-3 text-center">
+      <div class="mx-auto w-52 rounded-2xl bg-white p-3 shadow-lg">
+        <img class="w-full aspect-square" alt="新模拟软件入口二维码" src="${level10QrUrl()}" />
+      </div>
+      <div class="mt-3 text-[11px] text-zinc-500 break-all">${escapeHtml(LEVEL10_SOFTWARE_URL)}</div>
+    </div>
+
+    ${bigBtn('打开新模拟软件', 'level10OpenSoftware()', 'red')}
+    ${bigBtn('我已扫码进入，完成本关', 'level10Complete()')}
+    ${bigBtn('暂不进入，返回菜单', 'level10Leave()', 'ghost')}
+    ${fakeStat('现场可扫码或点击按钮进入体验')}
+  </div>`;
+};
+
+function level10QrUrl() {
+  return 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(LEVEL10_SOFTWARE_URL);
+}
+
+window.level10OpenSoftware = function() {
+  window.open(LEVEL10_SOFTWARE_URL, '_blank', 'noopener,noreferrer');
+  toast('已打开新模拟软件入口');
+};
+
+window.level10Complete = function() {
+  finishCurrent('主动离场');
+};
+
+window.level10Leave = function() {
+  setView('menu');
+};
+
+// ============================================================================
+//  关卡结算页
+// ============================================================================
+function renderLevelResult() {
+  const r = state.levelLastResult;
+  if (!r) return renderMenu();
+  const L = LEVELS.find(x => x.id === r.levelId);
+  const safe = r.delta >= 0;
+  const tactic = r.mainTactic || '主动离场';
+  const tacticReveal = TACTIC_EXPLANATION[tactic] || '本关你触发了一些常见的上头机制。';
+  return `
+    ${topBar()}
+    <div class="px-5 pt-6 pb-8">
+      <div class="text-center mb-6">
+        <div class="text-[10px] tracking-[0.4em] text-amber-500 mb-2">CHAPTER COMPLETE</div>
+        <h1 class="text-2xl font-display neon-text">${L?L.title:'关卡结算'}</h1>
+      </div>
+
+      <div class="card p-6 mb-5 text-center ${safe?'border-emerald-500/40':'border-rose-500/40'}">
+        <div class="text-6xl mb-2">${safe?'✓':'☠'}</div>
+        <div class="text-xs text-zinc-400 mb-1">本关收益/亏损</div>
+        <div class="text-4xl font-mono font-black ${safe?'text-emerald-400':'text-rose-400'}">
+          ${safe?'+':''}${fmt(r.delta).replace('¥','¥')}
+        </div>
+        <div class="text-[11px] text-zinc-500 mt-2">触发机关 ${r.trapCount} 次</div>
+      </div>
+
+      <div class="card p-5 mb-5">
+        <div class="text-[10px] tracking-widest text-amber-500 mb-2">你刚才被哪种机制拿捏？</div>
+        <div class="text-base font-bold text-amber-300 mb-2">${escapeHtml(tactic)}</div>
+        <div class="text-sm text-zinc-300 leading-relaxed">${escapeHtml(tacticReveal)}</div>
+      </div>
+
+      <div class="card p-4 mb-5 bg-zinc-900/40">
+        <div class="text-[10px] tracking-widest text-amber-500 mb-2">现实生活对应风险</div>
+        <div class="text-xs text-zinc-300 leading-relaxed">${escapeHtml(REAL_RISK[r.levelId] || '此类机制在赌博、网赚、提现门槛、刷单返利等场景广泛出现。')}</div>
+      </div>
+
+      <div class="text-[12px] text-zinc-400 italic text-center mb-6 px-4 leading-relaxed">
+        "${escapeHtml(SHARP_LINE[Math.abs(r.delta)%SHARP_LINE.length])}"
+      </div>
+
+      <button onclick="setView('menu')" class="btn-pop w-full py-4 mb-2">下一关 →</button>
+      <button onclick="setView('recovery')" class="btn-red w-full py-3 mb-2">🩹 我要回血</button>
+      <button onclick="setView('report')" class="btn-ghost w-full py-3">查看我的诊断书</button>
+    </div>`;
+}
+
+const SHARP_LINE = [
+  '你不是输给智商，而是输给了机制设计。',
+  '你没有真的想被骗，你只是被"差一点就赢"拖住了。',
+  '最危险的不是第一次亏损，而是亏损后想追回来。',
+  '当一个系统反复告诉你"只差一点"，你就要怀疑它是不是故意让你差一点。',
+  '很多骗局不是让你相信骗子，而是让你相信自己下一步能赢。'
+];
+
+const TACTIC_EXPLANATION = {
+  '差点中奖':'每一次"差一点中"都让你的执念翻倍。研究显示，"接近成功"激活的多巴胺比真没中更高，比真中了的还要持久。',
+  '小额甜头':'前几单稳赚 → 你以为找到了"刷单兼职"。其实那是骗子用真金白银投资的"开屏礼包"。',
+  '沉没成本':'一旦投入第一笔，你就被锁定了——"再做一单就回本"是滑坡的入口。',
+  '提现门槛':'流水不足、保证金、解冻费、税费——任何"想提钱要先交钱"的平台，都是诈骗。',
+  '概率操控':'红黑/大小/抽奖/棋牌/合成游戏的胜率全在后台调，前期让你赢，后期让你输。',
+  '回本冲动':'追损心理是最强陷阱。绝大多数受骗者的损失，是在"再交一笔就能拿回来"的过程中扩大的。',
+  '权威伪装':'真公检法/银行/平台从不在电话里要求你转账证明清白。',
+  '连胜错觉':'连胜让人误判自己手气好。事实是：每一次新独立事件的概率都不变。',
+  '攀比刺激':'系统制造"你快赢过别人"的错觉，让你为了面子和胜负欲越追越远。',
+  '临门一脚':'临近兑换前的"加倍一击"是收割信号。前面让你赢，最后一把让你梭哈。',
+  '裂变诱导':'拉人头 + 激活费 = 社交裂变诈骗。"差一人就开奖"的进度条永远卡在 99%。',
+  '信息核验':'输入学号、密码、银行卡、验证码——这些信息一旦给出，等同于把账户钥匙双手奉上。',
+  '二次解冻':'第一次保证金 + 第二次解冻金 + 第三次税款——只要你信"再交一笔就能拿回来"，骗子永远在最后一道门后。',
+  '规则黑箱':'合成、保底、复活、抽卡——规则不公开就是为了让你"以为下一次就赢"。',
+  '注意力剥夺':'倒计时让你来不及思考。诈骗常通过制造紧迫感降低判断力。',
+  '主动离场':'你看穿了机制——这是最重要的反诈能力。',
+  '假买家':'闲置交易里"高价秒拍 + 平台担保 + 保证金"是固定话术。',
+  '平台外交易':'骗子会先借平台页面获得信任，再把你引到社交软件和个人收款码。离开平台担保后，退款和投诉都很难生效。',
+  '假票截图':'票面截图、座位图、订单图都可以被 PS。只有能在官方票务平台或官方 App 内核验的订单，才是真正可确认的票。',
+  '扫码付款':'个人收款码不等于平台订单。"专业代抢、抢不到退"只是降低戒心的话术，付款后对方随时可以失联。',
+  '荐股诈骗':'前两支股票是真涨过的，第三支让你接盘。VIP 老师只是出货工具。',
+  '杀猪盘':'杀猪盘的核心不是投资技巧，而是关系操控：先用陪伴和承诺养熟信任，再把假平台包装成共同赚钱的机会。',
+  '高风险投机':'K 线大起大落会放大贪婪和恐惧。越想抓住每一次波动，越容易被追涨杀跌和手续费反复消耗。',
+  '引流伪装':'假入口、联名内测、新游体验常用来把你带离原平台，再用礼包、授权、激活费或拉人任务继续转化。',
+  '权限滥用':'授权通讯录/短信/通知 = 把验证码、亲友名单送给骗子。',
+  '裂变激活费':'锁定 → 助力 → 激活 → 税费，是社交锦鲤的标准管线。',
+  '稀有奖励':'稀有奖励永远在"差一步保底"——这一步永远走不到。',
+  '好胜心理':'与陌生人比拼时，你比的不是钱，是不甘心。',
+  '网络赌博':'网赌平台的本质：赢的是虚拟筹码，输的是真钱。任何兑换都需"通道费"。',
+  '裂变诈骗':'拉人 + 激活 + 税费的标准三段。'
+};
+
+const REAL_RISK = {
+  1:'抽奖型诈骗 / 网络博彩平台 / 充值返利 App。',
+  2:'刷单返利兼职群 / 任务连胜套路。',
+  3:'二手票务/演唱会门票代抢诈骗 → 平台外聊天、个人收款码、抢不到退费话术。',
+  4:'游戏抽卡氪金 / 盲盒沉迷 / 元宇宙诈骗。',
+  5:'校园邮箱钓鱼 / 一卡通账单补贴诈骗 / 统一身份认证仿冒页。',
+  6:'网络赌博 → 红黑/百家乐/大小球。',
+  7:'网络棋牌 / 炸金花/德州扑克/麻将代练诈骗。',
+  8:'高风险投资 / 虚拟币投机 / 频繁交易手续费损耗。',
+  9:'杀猪盘 / 网恋投资诈骗 / 假交易平台 / 提现解冻金。',
+  10:'新模拟软件入口 / 现场扫码体验 / 外部链接跳转。'
+};
+
+// ============================================================================
+//  全局回血中心
+// ============================================================================
+function renderRecoveryCenter() {
+  const ld = state.levelData;
+  return `
+    ${topBar()}
+    <div class="px-5 pt-4 pb-32">
+      <div class="text-center mb-5">
+        <div class="text-[10px] tracking-[0.4em] text-amber-500 mb-1">RECOVERY HUB</div>
+        <h1 class="text-2xl font-display neon-text">资金恢复中心</h1>
+        <p class="text-xs text-zinc-400 mt-1">余额不够继续挑战？下面这些"福利"能立刻让你满血复活。</p>
+      </div>
+
+      <div class="card p-4 mb-3" onclick="recovery1()">
+        <div class="flex items-start gap-3">
+          <div class="text-3xl">📺</div>
+          <div class="flex-1">
+            <div class="font-bold text-amber-300 text-sm">看反诈海报领 ¥10,000 补给</div>
+            <div class="text-[11px] text-zinc-400">观看 15 秒即可领取，限今日</div>
+          </div>
+          <div class="text-zinc-500">›</div>
+        </div>
+      </div>
+
+      <div class="card p-4 mb-3" onclick="recovery2()">
+        <div class="flex items-start gap-3">
+          <div class="text-3xl">📣</div>
+          <div class="flex-1">
+            <div class="font-bold text-amber-300 text-sm">邀请 3 名同学领 ¥8,000 复活金</div>
+            <div class="text-[11px] text-zinc-400">助力满后即可领取</div>
+          </div>
+          <div class="text-zinc-500">›</div>
+        </div>
+      </div>
+
+      <div class="card p-4 mb-3" onclick="recovery3()">
+        <div class="flex items-start gap-3">
+          <div class="text-3xl">💳</div>
+          <div class="flex-1">
+            <div class="font-bold text-amber-300 text-sm">备用金借款 · 最高 ¥20,000</div>
+            <div class="text-[11px] text-zinc-400">立即到账，按净资产排名</div>
+          </div>
+          <div class="text-zinc-500">›</div>
+        </div>
+      </div>
+
+      <div class="card p-4 mb-3" onclick="recovery4()">
+        <div class="flex items-start gap-3">
+          <div class="text-3xl">🎲</div>
+          <div class="flex-1">
+            <div class="font-bold text-amber-300 text-sm">翻倍回血 · 50% 概率翻倍</div>
+            <div class="text-[11px] text-zinc-400">投入当前余额，赢则翻倍</div>
+          </div>
+          <div class="text-zinc-500">›</div>
+        </div>
+      </div>
+
+      <div class="card p-4 mb-3" onclick="recovery5()">
+        <div class="flex items-start gap-3">
+          <div class="text-3xl">📅</div>
+          <div class="flex-1">
+            <div class="font-bold text-amber-300 text-sm">每日签到补给 ¥1,888</div>
+            <div class="text-[11px] text-zinc-400">连续签到 3 次得 ¥18,888</div>
+          </div>
+          <div class="text-zinc-500">›</div>
+        </div>
+      </div>
+
+      <button onclick="setView('menu')" class="btn-ghost w-full py-3 mt-4">← 返回菜单</button>
+    </div>`;
+}
+
+window.recovery1 = async function() {
+  // 看海报回血
+  if (!await customConfirm('📜 观看反诈海报', '开始观看 15 秒反诈安全海报？\n（教学：模拟看广告流程）', '观看', '跳过')) return;
+  toast('观看中... ¥10,000 补给金正在到账');
+  await new Promise(r => setTimeout(r, 1500));
+  state.frozenBonus += 10000;
+  if (await customConfirm('✅ 冻结资金', '¥10,000 已锁定为"冻结补给金"。\n要立即转入主钱包提现吗？\n（教学：注意是否会触发隐藏机关）', '转入提现', '保留冻结')) {
+    // 触发钓鱼
+    recordTrap({ levelId:'recovery', trapCode:'R1_FEE', trapName:'解冻通道费', tactic:'提现门槛', severity:2,
+      explanation:'"看广告 → 看似免费 → 想提现 → 99/399/999 解冻费"是奖励诈骗 App 的固定打法。' });
+    changeMoney(-99, '解冻通道费', 'R1_FEE');
+    if (await customConfirm('💰 保证金', '又要 ¥399 保证金，继续？', '继续', '放弃')) {
+      changeMoney(-399, '保证金', 'R1_FEE');
+    }
+    await customAlert('⛔ 平台跑路', '补给金消失了，平台跑路。');
+    state.frozenBonus = 0;
+  } else {
+    // 用户聪明拒绝转入
+    toast('✓ 你识破了"解冻费"陷阱（补给金保留为虚拟数字）');
+  }
+  saveLocal(); render();
+};
+
+window.recovery2 = async function() {
+  if (!await customConfirm('📣 模拟分享', '开始模拟分享流程？', '开始邀请', '取消')) return;
+  toast('模拟邀请 1/3...');
+  await new Promise(r => setTimeout(r, 700)); toast('模拟邀请 2/3...');
+  await new Promise(r => setTimeout(r, 700));
+  toast('模拟邀请 3/3 ✓');
+  await new Promise(r => setTimeout(r, 800));
+  if (await customConfirm('🎁 激活复活金', '助力满！激活 ¥8,000 复活金需缴 ¥88 激活费，继续？', '激活', '放弃')) {
+    changeMoney(-88, '复活激活费', 'R2_ACT');
+    recordTrap({ levelId:'recovery', trapCode:'R2_VIRAL', trapName:'裂变激活费', tactic:'裂变诱导', severity:2,
+      explanation:'裂变拉人 + 激活费 = 社交诈骗的固定管线。" 复活金"永远卡在最后一道门后。' });
+    if (await customConfirm('💰 风控费', '又要 ¥288 风控费，继续？', '继续', '放弃')) {
+      changeMoney(-288, '风控费', 'R2_ACT');
+    }
+    await customAlert('⛔ 活动下线', '复活金活动已下线');
+  } else {
+    toast('✓ 你识破了激活费陷阱');
+  }
+  recordRecovery(0);
+  render();
+};
+
+window.recovery3 = function() {
+  const modal = document.getElementById('customModal');
+  modal.style.display = 'flex';
+  modal.innerHTML = `
+    <div style="background:linear-gradient(160deg,#1a150a,#0d0d0d);border:1px solid rgba(245,197,66,0.3);border-radius:20px;padding:28px 24px;max-width:340px;width:100%;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="font-size:24px;margin-bottom:8px;">💰</div>
+        <div style="font-size:16px;font-weight:700;color:#ffd54a;">借款金额</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+        <button onclick="setLoanAmount(3000)" style="padding:14px;background:rgba(245,197,66,0.1);border:1px solid rgba(245,197,66,0.3);border-radius:12px;color:#ffd54a;font-weight:700;font-size:16px;cursor:pointer;">¥3,000</button>
+        <button onclick="setLoanAmount(10000)" style="padding:14px;background:rgba(245,197,66,0.1);border:1px solid rgba(245,197,66,0.3);border-radius:12px;color:#ffd54a;font-weight:700;font-size:16px;cursor:pointer;">¥10,000</button>
+        <button onclick="setLoanAmount(20000)" style="padding:14px;background:rgba(245,197,66,0.1);border:1px solid rgba(245,197,66,0.3);border-radius:12px;color:#ffd54a;font-weight:700;font-size:16px;cursor:pointer;">¥20,000</button>
+      </div>
+      <button onclick="customModalResolve(false)" style="width:100%;padding:12px;background:transparent;border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);font-weight:600;font-size:13px;border-radius:10px;cursor:pointer;">取消</button>
+    </div>`;
+  window._loanCallback = (amt) => {
+    modal.style.display = 'none';
+    modifyDebt(amt);
+    state.balance += amt;
+    recordRecovery(amt);
+    recordTrap({ levelId:'recovery', trapCode:'R3_LOAN', trapName:'借贷加码', tactic:'借贷加码', severity:3,
+      explanation:'借款回血让本金感觉"回来了"，但债务跟你回家——这是被骗者亏损翻倍的最常见路径。' });
+    toast(`✓ ¥${amt.toLocaleString()} 已到账（你已欠款 ¥${state.debt.toLocaleString()}）`);
+    saveLocal(); render();
+  };
+}
+
+window.setLoanAmount = function(amt) {
+  if (window._loanCallback) window._loanCallback(amt);
+};
+
+window.recovery4 = async function() {
+  const stake = Math.min(state.balance, 5000);
+  if (stake <= 0) return toast('钱包余额不足');
+  if (!await customConfirm('🎰 翻倍挑战', `投入 ¥${stake} 翻倍挑战，50% 概率翻倍 ¥${stake*2}，50% 归零。\n继续？`, '参与挑战', '放弃')) return;
+  changeMoney(-stake, '翻倍下注');
+  // 看似 50/50，实际偏向输（赌徒心理教育）
+  const win = Math.random() < 0.4;
+  if (win) { changeMoney(stake*2, '翻倍赢'); toast(`🎉 翻倍！+${stake*2}`); }
+  else {
+    toast('差一点！归零了');
+    recordTrap({ levelId:'recovery', trapCode:'R4_DOUBLE', trapName:'翻倍回血', tactic:'回本冲动', severity:2,
+      explanation:'看似公平的 50/50 实际偏向输——回血中心的"翻倍"不是用来翻倍的，是用来榨干你的本金。' });
+  }
+  recordRecovery(0);
+  saveLocal(); render();
+};
+
+window.recovery5 = async function() {
+  const ld = state.levelData;
+  toast('🎁 今日签到 +¥1,888');
+  changeMoney(1888, '签到补给');
+  await new Promise(r => setTimeout(r, 800));
+  if (await customConfirm('👑 VIP 资格', '连续签到 3 次得 ¥18,888，需开通 VIP 资格 ¥199，是否开通？', '开通 VIP', '暂时不开')) {
+    changeMoney(-199, '签到 VIP', 'R5_VIP');
+    recordTrap({ levelId:'recovery', trapCode:'R5_DAILY', trapName:'签到 VIP', tactic:'连胜错觉', severity:2,
+      explanation:'第一次签到给真钱，让你以为后面也是真的。其实"连续 3 次大奖"是用来诱你开通会员/看广告/绑卡的钩子。' });
+    if (await customConfirm('💳 绑卡核验', 'VIP 资格需先绑收款卡核验，继续？', '继续绑定', '暂不解绑')) {
+      recordTrap({ levelId:'recovery', trapCode:'R5_PHISH', trapName:'绑卡核验', tactic:'信息核验', severity:3,
+        explanation:'最危险的一步：绑定银行卡 + 输入验证码 = 账户被盗刷。' });
+      changeMoney(-3500, '账户被盗刷', 'R5_PHISH');
+    }
+  }
+  recordRecovery(1888);
+  render();
+};
+
+// ============================================================================
+//  最终报告
+// ============================================================================
+function renderFinalReport() {
+  const completed = LEVELS.filter(L => state.completedLevels[L.id]).length;
+  const net = state.balance - state.debt;
+  // 评分
+  let score = 100;
+  state.traps.forEach(t => {
+    const sev = t.severity || 1;
+    if (sev >= 3) score -= 15;
+    else if (sev >= 2) score -= 8;
+    else score -= 3;
+    if (t.trapCode && t.trapCode.includes('FEE')) score -= 5;
+  });
+  score -= state.recoveryUsedCount * 10;
+  if (state.debt > 0) score -= 20;
+  if (state.balance < 0) score -= 20;
+  if (completed === 10 && net > 0) score += 20;
+  score = Math.max(0, Math.min(100, score));
+
+  let level = 'S', levelLabel = '反诈王者', color = 'text-emerald-400';
+  if (score < 90) { level='A'; levelLabel='高度警觉'; color='text-cyan-400'; }
+  if (score < 75) { level='B'; levelLabel='基本安全'; color='text-amber-400'; }
+  if (score < 55) { level='C'; levelLabel='容易上头'; color='text-orange-400'; }
+  if (score < 35) { level='D'; levelLabel='高危玩家'; color='text-rose-400'; }
+  if (score < 15) { level='E'; levelLabel='诈骗重点目标'; color='text-rose-500'; }
+
+  // 最易击中的心理机制
+  const tacticFreq = {};
+  state.traps.forEach(t => { if (t.tactic) tacticFreq[t.tactic] = (tacticFreq[t.tactic]||0)+1; });
+  const topTactic = Object.entries(tacticFreq).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  const levelDetails = LEVELS.map(L => {
+    const r = state.levelResults[L.id];
+    const status = !r ? '—' : (r.delta>0?`+${fmt(r.delta).replace('¥','')}`:fmt(r.delta).replace('¥',''));
+    const cls = !r ? 'text-zinc-500' : (r.delta>0?'text-emerald-400':'text-rose-400');
+    return `<div class="flex justify-between items-center py-1.5 text-xs border-b border-white/5">
+      <span class="text-zinc-400">LV.${String(L.id).padStart(2,'0')} ${L.title}</span>
+      <span class="font-mono ${cls}">${status}</span>
+    </div>`;
+  }).join('');
+
+  return `
+    ${topBar()}
+    <div class="px-5 pt-4 pb-12">
+      <div class="text-center mb-5">
+        <div class="text-[10px] tracking-[0.4em] text-amber-500 mb-1">FINAL REPORT</div>
+        <h1 class="text-2xl font-display neon-text">你的反诈诊断书</h1>
+      </div>
+
+      <div class="card p-6 mb-5 text-center">
+        <div class="text-xs text-zinc-500 mb-1">综合评级</div>
+        <div class="text-7xl font-display ${color} my-2">${level}</div>
+        <div class="text-base font-bold ${color} mb-3">${levelLabel}</div>
+        <div class="text-3xl font-mono font-bold">${score} <span class="text-sm font-normal text-zinc-500">/100</span></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        <div class="card p-3 text-center">
+          <div class="text-[10px] text-zinc-500 mb-1">起始</div>
+          <div class="text-sm font-mono">${fmt(INITIAL_BALANCE)}</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="text-[10px] text-zinc-500 mb-1">最终余额</div>
+          <div class="text-sm font-mono ${state.balance>=0?'text-amber-300':'text-rose-400'}">${fmt(state.balance)}</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="text-[10px] text-zinc-500 mb-1">净资产</div>
+          <div class="text-sm font-mono ${net>=0?'text-emerald-400':'text-rose-400'}">${fmt(net)}</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 mb-5">
+        <div class="card p-3"><div class="text-[10px] text-zinc-500">总收益</div><div class="text-emerald-400 font-mono">${fmt(state.totalEarned)}</div></div>
+        <div class="card p-3"><div class="text-[10px] text-zinc-500">总亏损</div><div class="text-rose-400 font-mono">${fmt(-state.totalLost)}</div></div>
+        <div class="card p-3"><div class="text-[10px] text-zinc-500">完成关卡</div><div class="font-mono">${completed}/10</div></div>
+        <div class="card p-3"><div class="text-[10px] text-zinc-500">触发机关</div><div class="font-mono text-amber-300">${state.traps.length} 次</div></div>
+        <div class="card p-3"><div class="text-[10px] text-zinc-500">回血次数</div><div class="font-mono">${state.recoveryUsedCount}</div></div>
+        <div class="card p-3"><div class="text-[10px] text-zinc-500">负债</div><div class="font-mono text-rose-400">${fmt(state.debt)}</div></div>
+      </div>
+
+      <div class="card p-4 mb-5">
+        <div class="text-[10px] tracking-widest text-amber-500 mb-2">最容易击中你的心理机制</div>
+        ${topTactic.length ? topTactic.map(([t,n])=>
+          `<div class="flex justify-between items-center py-1.5 border-b border-white/5 last:border-0">
+            <span class="text-sm">${escapeHtml(t)}</span>
+            <span class="text-xs text-amber-300 font-mono">×${n}</span>
+          </div>`).join('') : '<div class="text-xs text-zinc-500">没有触发任何陷阱，太棒了。</div>'}
+      </div>
+
+      <div class="card p-4 mb-5">
+        <div class="text-[10px] tracking-widest text-amber-500 mb-2">10 关明细</div>
+        ${levelDetails}
+      </div>
+
+      <div class="card p-5 mb-5 bg-amber-500/10 border-amber-500/40">
+        <div class="text-amber-300 text-xs tracking-widest mb-3">五条保命铁律</div>
+        <ul class="text-sm text-amber-100 space-y-2 leading-relaxed">
+          <li>1. 凡是要先充钱才能"提现"的——100% 是骗局。</li>
+          <li>2. 凡是"差一点就赢"的——系统就是靠这个让你掏钱。</li>
+          <li>3. 凡是"连胜""组合任务""保底"——你的本金已经被绑架。</li>
+          <li>4. 想回本时是最危险的，请立刻关掉手机。</li>
+          <li>5. 任何陌生平台让你输验证码、绑卡、授权通讯录——立刻退出。</li>
+        </ul>
+      </div>
+
+      <div class="card p-4 text-center mb-5">
+        <div class="text-[11px] text-zinc-400 mb-2">现实生活中如遇可疑情况</div>
+        <div class="text-2xl font-mono font-black neon-text">96110</div>
+        <div class="text-[10px] text-zinc-500 mt-1">国家反诈中心专线 · 24 小时</div>
+      </div>
+
+      <button onclick="setView('menu')" class="btn-pop w-full py-4 mb-2">回菜单继续挑战</button>
+      <button onclick="restartAll()" class="btn-ghost w-full py-3">重新开始</button>
+    </div>`;
+}
+
+window.restartAll = async function() {
+  if (!await customConfirm('⚠ 重新开始', '清空所有数据，重新开始？', '确认清空', '取消')) return;
+  localStorage.removeItem('fg_state');
+  Object.assign(state, {
+    sessionId:null, nickname:'', balance:INITIAL_BALANCE, debt:0,
+    completedLevels:{}, levelResults:{}, traps:[], transactions:[],
+    recoveryUsedCount:0, totalRecovered:0, totalEarned:0, totalLost:0,
+    view:'welcome', currentLevel:null, levelData:{}, levelStep:0
+  });
+  render();
+};
+
+// ============================================================================
+//  大屏页 /screen
+// ============================================================================
+function renderScreen() {
+  const d = state.stats || { levels: [], online:0, totalVisits:0, todayVisits:0 };
+  const maxPlays = Math.max(1, ...(d.levels || []).map(x => x.participants || 0));
+  const rows = LEVELS.map(L => {
+    const s = (d.levels || []).find(x => Number(x.level_id) === L.id) || {};
+    const count = s.participants || 0;
+    const pct = Math.round(count / maxPlays * 100);
+    return `<div class="py-3 border-b border-white/5 last:border-0">
+      <div class="flex items-center justify-between gap-3 mb-2">
+        <div class="min-w-0">
+          <span class="font-display text-amber-400 text-xs">LV.${String(L.id).padStart(2,'0')}</span>
+          <span class="ml-2 text-sm font-bold">${escapeHtml(L.title)}</span>
+        </div>
+        <div class="font-mono text-amber-300">${count.toLocaleString('zh-CN')}</div>
+      </div>
+      <div class="h-2 rounded-full bg-white/5 overflow-hidden">
+        <div class="h-full bg-amber-400" style="width:${pct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="min-h-screen p-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-6">
+        <div class="text-[10px] tracking-[0.5em] text-amber-500 mb-1">CAMPUS · ANTI-FRAUD ARENA</div>
+        <h1 class="text-4xl md:text-6xl font-display neon-text">上当模拟器 · 访问统计</h1>
+        <div class="text-xs text-zinc-500 mt-1">${d.localOnly ? '静态托管模式 · 本机数据' : '每 5 秒自动刷新'}</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+        <div class="card p-4 text-center">
+          <div class="text-[10px] text-zinc-500">当前在线</div>
+          <div class="text-4xl font-display text-emerald-300">${d.online || 0}</div>
+        </div>
+        <div class="card p-4 text-center">
+          <div class="text-[10px] text-zinc-500">总访问量</div>
+          <div class="text-4xl font-display text-amber-300">${(d.totalVisits || 0).toLocaleString('zh-CN')}</div>
+        </div>
+        <div class="card p-4 text-center">
+          <div class="text-[10px] text-zinc-500">今日访问</div>
+          <div class="text-4xl font-display text-cyan-300">${(d.todayVisits || 0).toLocaleString('zh-CN')}</div>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <div class="text-amber-500 text-xs tracking-widest mb-3">各游戏游玩人次</div>
+        ${rows}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ============================================================================
+//  主渲染
+// ============================================================================
+function render() {
+  let html = '';
+  switch (state.view) {
+    case 'welcome': html = renderWelcome(); break;
+    case 'menu':
+      // 异步刷新统计
+      loadStats().then(() => { if (state.view==='menu') $('app').innerHTML = renderMenu(); });
+      html = renderMenu();
+      break;
+    case 'level': html = renderLevel(state.currentLevel); break;
+    case 'result': html = renderLevelResult(); break;
+    case 'recovery': html = renderRecoveryCenter(); break;
+    case 'report': html = renderFinalReport(); break;
+    case 'screen': html = renderScreen(); break;
+    default: html = renderWelcome();
+  }
+  $('app').innerHTML = html;
+}
+
+// ============================================================================
+//  初始化
+// ============================================================================
+async function init() {
+  await recordVisit('pageview');
+  if (window._visitTimer) clearInterval(window._visitTimer);
+  window._visitTimer = setInterval(() => recordVisit('heartbeat'), 60000);
+
+  // 大屏直达
+  const params = new URLSearchParams(location.search);
+  const isScreenRoute = /\/screen\/?$/.test(location.pathname) || params.get('screen') === '1' || location.hash === '#screen';
+  if (isScreenRoute) {
+    state.view = 'screen';
+    state.nickname = '大屏';
+    const r = await api('/api/screen');
+    if (r && r.ok) state.stats = r;
+    render();
+    if (window._screenTimer) clearInterval(window._screenTimer);
+    window._screenTimer = setInterval(async () => {
+      const r2 = await api('/api/screen');
+      if (r2 && r2.ok) { state.stats = r2; render(); }
+    }, 5000);
+    return;
+  }
+
+  // 加载本地状态
+  const local = loadLocal();
+  if (local && local.sessionId) {
+    Object.assign(state, local);
+    state.view = state.nickname ? 'menu' : 'welcome';
+  }
+
+  // URL 参数：?level=N 直达关卡
+  const lvl = parseInt(params.get('level') || '0', 10);
+  if (lvl >= 1 && lvl <= 10) {
+    if (!state.sessionId) {
+      // 自动创建匿名 session
+      await ensureSession('');
+    }
+    enterLevel(lvl);
+    return;
+  }
+
+  render();
+}
+
+init();
+</script>
+</body>
+</html>

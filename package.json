@@ -1,0 +1,18 @@
+{
+  "name": "fraud-game",
+  "version": "1.0.0",
+  "description": "上当模拟器：你能带着多少钱离场？— 高校沉浸式反诈闯关游戏",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "body-parser": "^1.20.2"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}

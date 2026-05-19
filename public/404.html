@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>上当模拟器</title>
+<script>
+  const parts = location.pathname.split('/').filter(Boolean);
+  const repoBase = location.hostname.endsWith('github.io') && parts.length ? '/' + parts[0] + '/' : '/';
+  const screen = /\/screen\/?$/.test(location.pathname);
+  const query = screen
+    ? (location.search ? location.search + '&screen=1' : '?screen=1')
+    : location.search;
+  location.replace(repoBase + 'game.html' + query + location.hash);
+</script>
+</head>
+<body>
+  <a href="./game.html">返回游戏</a>
+</body>
+</html>

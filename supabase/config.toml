@@ -1,0 +1,2 @@
+[functions.fraud-game-api]
+verify_jwt = false
