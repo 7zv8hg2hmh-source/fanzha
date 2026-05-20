@@ -630,11 +630,14 @@ const state = {
   levelData: {},
   // 服务器统计缓存
   stats: null,
+  // 当前浏览器玩家最高记录
+  personalBest: null,
 };
 
 // ---------- 本地持久化 ----------
 function saveLocal() {
   try {
+    updatePersonalBest();
     const minimal = {
       sessionId: state.sessionId, nickname: state.nickname,
       balance: state.balance, debt: state.debt,
@@ -655,6 +658,47 @@ function loadLocal() {
     if (!s) return null;
     return JSON.parse(s);
   } catch(e) { return null; }
+}
+
+function completedCount() {
+  return LEVELS.filter(L => state.completedLevels[L.id]).length;
+}
+
+function loadPersonalBest() {
+  try {
+    const raw = localStorage.getItem('fg_personal_best');
+    if (!raw) return null;
+    const best = JSON.parse(raw);
+    if (!Number.isFinite(best.net)) return null;
+    return best;
+  } catch(e) {
+    return null;
+  }
+}
+
+function savePersonalBest(best) {
+  state.personalBest = best;
+  try {
+    localStorage.setItem('fg_personal_best', JSON.stringify(best));
+  } catch(e) {}
+}
+
+function updatePersonalBest() {
+  const net = (state.balance || 0) - (state.debt || 0);
+  const completed = completedCount();
+  const current = {
+    net,
+    balance:state.balance || 0,
+    debt:state.debt || 0,
+    completed,
+    nickname:state.nickname || '匿名玩家',
+    at:Date.now()
+  };
+  const best = state.personalBest || loadPersonalBest();
+  const shouldUpdate = !best || net > best.net || (net === best.net && completed > (best.completed || 0));
+  if (shouldUpdate) savePersonalBest(current);
+  else state.personalBest = best;
+  return state.personalBest || current;
 }
 
 function getVisitorId() {
@@ -962,6 +1006,7 @@ async function loadStats() {
 
 function renderMenu() {
   const stats = state.stats || { levels: [], online:0, totalVisits:0, todayVisits:0 };
+  const best = state.personalBest || updatePersonalBest();
   const levelStat = (id) => stats.levels.find(x => x.level_id === id) || {};
   const cards = LEVELS.map(L => {
     const r = state.levelResults[L.id];
@@ -1012,6 +1057,14 @@ function renderMenu() {
           <button onclick="setView('recovery')" class="text-amber-300 underline-offset-2 underline decoration-dashed">
             🩹 资金恢复中心
           </button>
+        </div>
+        <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+          <span class="text-zinc-500">个人最高净资产</span>
+          <span class="font-mono font-bold ${best.net>=0?'text-emerald-300':'text-rose-300'}">${fmt(best.net)}</span>
+        </div>
+        <div class="mt-1 flex items-center justify-between text-[10px] text-zinc-600">
+          <span>${escapeHtml(best.nickname || '匿名玩家')}</span>
+          <span>完成 ${best.completed || 0}/10</span>
         </div>
       </div>
 
@@ -3337,6 +3390,7 @@ window.recovery5 = async function() {
 function renderFinalReport() {
   const completed = LEVELS.filter(L => state.completedLevels[L.id]).length;
   const net = state.balance - state.debt;
+  const best = updatePersonalBest();
   // 评分
   let score = 100;
   state.traps.forEach(t => {
@@ -3404,6 +3458,19 @@ function renderFinalReport() {
         </div>
       </div>
 
+      <div class="card p-4 mb-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-[10px] tracking-widest text-amber-500 mb-1">当前玩家最高记录</div>
+            <div class="text-xs text-zinc-500">按历史最高净资产计算</div>
+          </div>
+          <div class="text-right">
+            <div class="text-2xl font-display ${best.net>=0?'text-emerald-300':'text-rose-300'}">${fmt(best.net)}</div>
+            <div class="text-[10px] text-zinc-500 mt-1">完成 ${best.completed || 0}/10</div>
+          </div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-2 gap-2 mb-5">
         <div class="card p-3"><div class="text-[10px] text-zinc-500">总收益</div><div class="text-emerald-400 font-mono">${fmt(state.totalEarned)}</div></div>
         <div class="card p-3"><div class="text-[10px] text-zinc-500">总亏损</div><div class="text-rose-400 font-mono">${fmt(-state.totalLost)}</div></div>
@@ -3456,7 +3523,8 @@ window.restartAll = async function() {
     sessionId:null, nickname:'', balance:INITIAL_BALANCE, debt:0,
     completedLevels:{}, levelResults:{}, traps:[], transactions:[],
     recoveryUsedCount:0, totalRecovered:0, totalEarned:0, totalLost:0,
-    view:'welcome', currentLevel:null, levelData:{}, levelStep:0
+    view:'welcome', currentLevel:null, levelData:{}, levelStep:0,
+    personalBest:loadPersonalBest()
   });
   render();
 };
@@ -3542,6 +3610,7 @@ function render() {
 //  初始化
 // ============================================================================
 async function init() {
+  state.personalBest = loadPersonalBest();
   await recordVisit('pageview');
   if (window._visitTimer) clearInterval(window._visitTimer);
   window._visitTimer = setInterval(() => recordVisit('heartbeat'), 60000);
