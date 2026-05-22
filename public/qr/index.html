@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>上当模拟器 · 二维码</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px;background:#0a0a0a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  h1{margin:0 0 6px;color:#f5c542}
+  p{margin:0 0 20px;color:#a1a1aa;font-size:14px;line-height:1.7}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+  .card{border:1px solid rgba(245,197,66,.22);background:#15110b;border-radius:8px;padding:14px}
+  .card img{display:block;width:100%;aspect-ratio:1;background:#fff;border-radius:4px;padding:8px}
+  .name{margin-top:10px;font-weight:700;color:#f5c542}
+  .url{margin-top:4px;font-size:11px;color:#a1a1aa;word-break:break-all}
+  @media print{
+    body{background:#fff;color:#000}
+    p,.url{color:#333}
+    .card{break-inside:avoid;background:#fff;border-color:#bbb}
+  }
+</style>
+</head>
+<body>
+  <h1>上当模拟器 · 可扫码入口</h1>
+  <p>这些二维码是本地 SVG 文件，不依赖第三方二维码服务。打印或投屏时建议保持白底、不要遮挡、不要缩得太小。</p>
+  <div class="grid">
+    <div class="card"><img src="./main.svg" alt="主入口二维码"><div class="name">主入口</div><div class="url">https://7zv8hg2hmh-source.github.io/fanzha/</div></div>
+    <div class="card"><img src="./screen.svg" alt="统计大屏二维码"><div class="name">统计大屏</div><div class="url">https://7zv8hg2hmh-source.github.io/fanzha/screen/</div></div>
+    <div class="card"><img src="./level-1.svg" alt="第1关二维码"><div class="name">LV.01 幸运旋涡</div><div class="url">?level=1</div></div>
+    <div class="card"><img src="./level-2.svg" alt="第2关二维码"><div class="name">LV.02 连胜挑战</div><div class="url">?level=2</div></div>
+    <div class="card"><img src="./level-3.svg" alt="第3关二维码"><div class="name">LV.03 内场代抢</div><div class="url">?level=3</div></div>
+    <div class="card"><img src="./level-4.svg" alt="第4关二维码"><div class="name">LV.04 宝箱风暴</div><div class="url">?level=4</div></div>
+    <div class="card"><img src="./level-5.svg" alt="第5关二维码"><div class="name">LV.05 校园邮箱</div><div class="url">?level=5</div></div>
+    <div class="card"><img src="./level-6.svg" alt="第6关二维码"><div class="name">LV.06 红黑一念</div><div class="url">?level=6</div></div>
+    <div class="card"><img src="./level-7.svg" alt="第7关二维码"><div class="name">LV.07 牌桌新星</div><div class="url">?level=7</div></div>
+    <div class="card"><img src="./level-8.svg" alt="第8关二维码"><div class="name">LV.08 金牌操盘手</div><div class="url">?level=8</div></div>
+    <div class="card"><img src="./level-9.svg" alt="第9关二维码"><div class="name">LV.09 甜蜜陷阱</div><div class="url">?level=9</div></div>
+    <div class="card"><img src="./level-10.svg" alt="第10关二维码"><div class="name">LV.10 神秘内测</div><div class="url">?level=10</div></div>
+    <div class="card"><img src="./shangdang.svg" alt="防骗模拟器二维码"><div class="name">防骗模拟器</div><div class="url">https://7zv8hg2hmh-source.github.io/shangdang/</div></div>
+  </div>
+</body>
+</html>

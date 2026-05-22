@@ -3054,22 +3054,24 @@ window.level9Exit = function() {
 // ============================================================================
 //  LEVEL 10: 神秘内测（新模拟软件入口）
 // ============================================================================
-const LEVEL10_SOFTWARE_URL = 'https://example.com/new-simulator';
+const LEVEL10_SOFTWARE_URL = 'https://7zv8hg2hmh-source.github.io/shangdang/';
 
 LEVEL_RENDERERS[10] = function() {
   return `<div class="px-5 pt-3 pb-8">
     ${levelHeader('🎮 神秘内测 · 扫码进入')}
     <div class="card p-5 my-3 text-center bg-zinc-950 border-amber-500/30">
       <div class="text-6xl mb-3">🎮</div>
-      <div class="text-amber-300 font-display text-2xl mb-1">新模拟软件体验</div>
-      <div class="text-xs text-zinc-400 leading-relaxed">点击下方按钮，或使用手机扫码进入新的互动模拟软件。</div>
+      <div class="text-amber-300 font-display text-2xl mb-1">防骗模拟器</div>
+      <div class="text-xs text-zinc-400 leading-relaxed">这是新的互动模拟游戏。点击下方按钮，或使用另一台手机扫码进入体验。</div>
     </div>
 
     <div class="card p-5 my-3 text-center">
-      <div class="mx-auto w-52 rounded-2xl bg-white p-3 shadow-lg">
+      <div class="mx-auto w-64 max-w-full rounded-xl bg-white p-4 shadow-lg">
         <img class="w-full aspect-square" alt="新模拟软件入口二维码" src="${level10QrUrl()}" />
       </div>
       <div class="mt-3 text-[11px] text-zinc-500 break-all">${escapeHtml(LEVEL10_SOFTWARE_URL)}</div>
+      <button onclick="level10CopySoftwareUrl()" class="btn-ghost w-full py-2 mt-3 text-xs">复制链接</button>
+      <div class="mt-2 text-[10px] text-zinc-600 leading-relaxed">如果在同一台手机上看到二维码，无法用本机摄像头直接扫；请点按钮打开，或把二维码投屏/打印后扫码。</div>
     </div>
 
     ${bigBtn('打开新模拟软件', 'level10OpenSoftware()', 'red')}
@@ -3080,12 +3082,21 @@ LEVEL_RENDERERS[10] = function() {
 };
 
 function level10QrUrl() {
-  return 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(LEVEL10_SOFTWARE_URL);
+  return './qr/shangdang.svg';
 }
 
 window.level10OpenSoftware = function() {
   window.open(LEVEL10_SOFTWARE_URL, '_blank', 'noopener,noreferrer');
   toast('已打开新模拟软件入口');
+};
+
+window.level10CopySoftwareUrl = async function() {
+  try {
+    await navigator.clipboard.writeText(LEVEL10_SOFTWARE_URL);
+    toast('链接已复制');
+  } catch(e) {
+    customAlert('复制链接', LEVEL10_SOFTWARE_URL, '知道了');
+  }
 };
 
 window.level10Complete = function() {

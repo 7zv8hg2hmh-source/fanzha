@@ -19,6 +19,7 @@ fraud-game/
     ├── index.html      # GitHub Pages 入口，跳转到 game.html
     ├── 404.html        # 静态路由兜底
     ├── screen/index.html # 大屏静态入口
+    ├── qr/             # 可打印/投屏扫码的本地 SVG 二维码
     └── game.html       # 单文件前端，含 10 关 + 回血 + 统计大屏
 ```
 
@@ -70,6 +71,7 @@ PORT=8080 node server.js   # 自定义端口
 | `https://你的用户名.github.io/仓库名/game.html?level=1` | 扫码直达第 1 关 |
 | `https://你的用户名.github.io/仓库名/screen/` | 统计大屏 |
 | `https://你的用户名.github.io/仓库名/game.html?screen=1` | 统计大屏备用入口 |
+| `https://你的用户名.github.io/仓库名/qr/` | 可打印二维码总览 |
 
 ### 共享统计怎么处理
 
@@ -181,7 +183,15 @@ sudo certbot --nginx -d fanzha.your-domain.com
 
 ## 二维码生成
 
-**最简单**（活动海报用）：
+项目已经内置了一套本地 SVG 二维码，在 GitHub Pages 上访问：
+
+```
+https://7zv8hg2hmh-source.github.io/fanzha/qr/
+```
+
+这些二维码不依赖第三方生成服务，适合直接打印、投屏、贴海报。注意：如果二维码显示在同一台手机屏幕上，手机摄像头当然没法扫自己屏幕；这种场景请直接点页面里的按钮/链接，或把二维码投屏/打印出来扫码。
+
+**手动生成**（活动海报用）：
 
 直接用任意二维码生成工具（草料、QR Code Generator）输入：
 
